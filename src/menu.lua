@@ -152,7 +152,7 @@ PlayerTab:AddToggle({
 
 local UniversalTab = Window:MakeTab({
     Name = "Універсальне", 
-    Icon = "rbxassetid://", 
+    Icon = "rbxassetid://17404114716", 
     PremiumOnly = false
 })
 

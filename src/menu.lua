@@ -19,23 +19,60 @@ local Section = PlayerTab:AddSection({
 
 local walkSpeed = 16
 local jumpHeight = 7
-local InfiniteJumpEnabled = false
+local fieldOfView = 70  -- Начальное значение FOV
 
-local function setPlayerStats()
-    local humanoid = game.Players.LocalPlayer.Character:WaitForChild("Humanoid")
+-- Функция для блокировки изменений
+local function monitorHumanoid(humanoid)
+    -- Блокируем изменение WalkSpeed
+    humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
+        if humanoid.WalkSpeed ~= walkSpeed then
+            humanoid.WalkSpeed = walkSpeed
+        end
+    end)
+
+    -- Блокируем изменение JumpHeight
+    humanoid:GetPropertyChangedSignal("JumpHeight"):Connect(function()
+        if humanoid.JumpHeight ~= jumpHeight then
+            humanoid.JumpHeight = jumpHeight
+        end
+    end)
+
+    -- Устанавливаем начальные значения
     humanoid.WalkSpeed = walkSpeed
     humanoid.JumpHeight = jumpHeight
 end
 
-game.Players.LocalPlayer.CharacterAdded:Connect(function()
-    setPlayerStats()
-end)
-
-game:GetService('Players').PlayerAdded:Connect(function(player)
-    player.CharacterAdded:Connect(function()
-        setPlayerStats()
+-- Функция для блокировки изменений FOV
+local function monitorFOV()
+    game.Workspace.CurrentCamera:GetPropertyChangedSignal("FieldOfView"):Connect(function()
+        if game.Workspace.CurrentCamera.FieldOfView ~= fieldOfView then
+            game.Workspace.CurrentCamera.FieldOfView = fieldOfView
+        end
     end)
-end)
+
+    -- Устанавливаем начальное значение FOV
+    game.Workspace.CurrentCamera.FieldOfView = fieldOfView
+end
+
+local function setupCharacter(character)
+    local humanoid = character:WaitForChild("Humanoid") -- Ждем появления Humanoid
+    if humanoid then
+        humanoid.WalkSpeed = walkSpeed -- Устанавливаем скорость
+        humanoid.JumpHeight = jumpHeight -- Устанавливаем высоту прыжка
+        monitorHumanoid(humanoid) -- Подключаем блокировку изменений
+    end
+end
+
+-- Отслеживаем, когда персонаж игрока появляется
+game.Players.LocalPlayer.CharacterAdded:Connect(setupCharacter)
+
+-- Для уже существующего персонажа
+if game.Players.LocalPlayer.Character then
+    setupCharacter(game.Players.LocalPlayer.Character)
+end
+
+-- Запускаем защиту FOV
+monitorFOV()
 
 PlayerTab:AddSlider({
     Name = "Швидкість руху",
@@ -47,7 +84,13 @@ PlayerTab:AddSlider({
     ValueName = "Сила",
     Callback = function(Value)
         walkSpeed = Value
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = walkSpeed
+        local character = game.Players.LocalPlayer.Character
+        if character then
+            local humanoid = character:FindFirstChild("Humanoid")
+            if humanoid then
+                humanoid.WalkSpeed = walkSpeed
+            end
+        end
     end
 })
 
@@ -61,7 +104,13 @@ PlayerTab:AddSlider({
     ValueName = "Сила",
     Callback = function(Value)
         jumpHeight = Value
-        game.Players.LocalPlayer.Character.Humanoid.JumpHeight = jumpHeight
+        local character = game.Players.LocalPlayer.Character
+        if character then
+            local humanoid = character:FindFirstChild("Humanoid")
+            if humanoid then
+                humanoid.JumpHeight = jumpHeight
+            end
+        end
     end
 })
 
@@ -74,7 +123,8 @@ PlayerTab:AddSlider({
     Increment = 1,
     ValueName = "Сила",
     Callback = function(Value)
-        game.Workspace.CurrentCamera.FieldOfView = Value
+        fieldOfView = Value
+        game.Workspace.CurrentCamera.FieldOfView = fieldOfView
     end
 })
 

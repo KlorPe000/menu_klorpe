@@ -29,36 +29,35 @@ local fovEnabled = true
 -- Функция для блокировки изменений
 local function monitorHumanoid(humanoid)
     humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
-        if humanoid.WalkSpeed ~= walkSpeed then
+        if humanoid.WalkSpeed ~= walkSpeed and walkSpeedEnabled then
             humanoid.WalkSpeed = walkSpeed
         end
     end)
 
     humanoid:GetPropertyChangedSignal("JumpHeight"):Connect(function()
-        if humanoid.JumpHeight ~= jumpHeight then
+        if humanoid.JumpHeight ~= jumpHeight and jumpHeightEnabled then
             humanoid.JumpHeight = jumpHeight
         end
     end)
-
-    humanoid.WalkSpeed = walkSpeed
-    humanoid.JumpHeight = jumpHeight
 end
 
 local function monitorFOV()
     game.Workspace.CurrentCamera:GetPropertyChangedSignal("FieldOfView"):Connect(function()
-        if game.Workspace.CurrentCamera.FieldOfView ~= fieldOfView then
+        if game.Workspace.CurrentCamera.FieldOfView ~= fieldOfView and fovEnabled then
             game.Workspace.CurrentCamera.FieldOfView = fieldOfView
         end
     end)
-
-    game.Workspace.CurrentCamera.FieldOfView = fieldOfView
 end
 
 local function setupCharacter(character)
     local humanoid = character:WaitForChild("Humanoid")
     if humanoid then
-        humanoid.WalkSpeed = walkSpeed
-        humanoid.JumpHeight = jumpHeight
+        if walkSpeedEnabled then
+            humanoid.WalkSpeed = walkSpeed
+        end
+        if jumpHeightEnabled then
+            humanoid.JumpHeight = jumpHeight
+        end
         monitorHumanoid(humanoid)
     end
 end
@@ -98,10 +97,18 @@ PlayerTab:AddToggle({
     Default = true,
     Callback = function(State)
         walkSpeedEnabled = State
-        if walkSpeedEnabled then
-            print("Скорость включена")
-        else
-            print("Скорость выключена")
+        local character = game.Players.LocalPlayer.Character
+        if character then
+            local humanoid = character:FindFirstChild("Humanoid")
+            if humanoid then
+                if walkSpeedEnabled then
+                    humanoid.WalkSpeed = walkSpeed
+                    print("Скорость включена")
+                else
+                    humanoid.WalkSpeed = 16 -- Сбрасываем к стандартному значению
+                    print("Скорость выключена")
+                end
+            end
         end
     end
 })
@@ -133,10 +140,18 @@ PlayerTab:AddToggle({
     Default = true,
     Callback = function(State)
         jumpHeightEnabled = State
-        if jumpHeightEnabled then
-            print("Высота прыжка включена")
-        else
-            print("Высота прыжка выключена")
+        local character = game.Players.LocalPlayer.Character
+        if character then
+            local humanoid = character:FindFirstChild("Humanoid")
+            if humanoid then
+                if jumpHeightEnabled then
+                    humanoid.JumpHeight = jumpHeight
+                    print("Высота прыжка включена")
+                else
+                    humanoid.JumpHeight = 7 -- Сбрасываем к стандартному значению
+                    print("Высота прыжка выключена")
+                end
+            end
         end
     end
 })
@@ -163,8 +178,10 @@ PlayerTab:AddToggle({
     Callback = function(State)
         fovEnabled = State
         if fovEnabled then
+            game.Workspace.CurrentCamera.FieldOfView = fieldOfView
             print("Поле зрения включено")
         else
+            game.Workspace.CurrentCamera.FieldOfView = 70 -- Сбрасываем к стандартному значению
             print("Поле зрения выключено")
         end
     end

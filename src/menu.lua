@@ -209,7 +209,6 @@ PlayerTab:AddToggle({
 })
 
 
-
 local function activateFLY()
 
     local main = Instance.new("ScreenGui")

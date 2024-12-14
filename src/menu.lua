@@ -22,42 +22,69 @@ local jumpHeight = 7
 local fieldOfView = 70  -- Начальное значение FOV
 
 -- Переменные для включения и выключения изменений
-local walkSpeedEnabled = true
-local jumpHeightEnabled = true
-local fovEnabled = true
+local walkSpeedEnabled = false
+local jumpHeightEnabled = false
+local fovEnabled = false
+
+-- Дефолтные значения из игры
+local defaultWalkSpeed = 16
+local defaultJumpHeight = 7
+local defaultFieldOfView = 70
+
+-- Функция для сброса значений на дефолтные
+local function resetHumanoid(humanoid)
+    humanoid.WalkSpeed = defaultWalkSpeed
+    humanoid.JumpHeight = defaultJumpHeight
+end
+
+local function resetFOV()
+    game.Workspace.CurrentCamera.FieldOfView = defaultFieldOfView
+end
 
 -- Функция для блокировки изменений
 local function monitorHumanoid(humanoid)
     humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
-        if humanoid.WalkSpeed ~= walkSpeed and walkSpeedEnabled then
+        if walkSpeedEnabled and humanoid.WalkSpeed ~= walkSpeed then
             humanoid.WalkSpeed = walkSpeed
         end
     end)
 
     humanoid:GetPropertyChangedSignal("JumpHeight"):Connect(function()
-        if humanoid.JumpHeight ~= jumpHeight and jumpHeightEnabled then
+        if jumpHeightEnabled and humanoid.JumpHeight ~= jumpHeight then
             humanoid.JumpHeight = jumpHeight
         end
     end)
+
+    if walkSpeedEnabled then
+        humanoid.WalkSpeed = walkSpeed
+    else
+        humanoid.WalkSpeed = defaultWalkSpeed
+    end
+
+    if jumpHeightEnabled then
+        humanoid.JumpHeight = jumpHeight
+    else
+        humanoid.JumpHeight = defaultJumpHeight
+    end
 end
 
 local function monitorFOV()
     game.Workspace.CurrentCamera:GetPropertyChangedSignal("FieldOfView"):Connect(function()
-        if game.Workspace.CurrentCamera.FieldOfView ~= fieldOfView and fovEnabled then
+        if fovEnabled and game.Workspace.CurrentCamera.FieldOfView ~= fieldOfView then
             game.Workspace.CurrentCamera.FieldOfView = fieldOfView
         end
     end)
+
+    if fovEnabled then
+        game.Workspace.CurrentCamera.FieldOfView = fieldOfView
+    else
+        resetFOV()
+    end
 end
 
 local function setupCharacter(character)
     local humanoid = character:WaitForChild("Humanoid")
     if humanoid then
-        if walkSpeedEnabled then
-            humanoid.WalkSpeed = walkSpeed
-        end
-        if jumpHeightEnabled then
-            humanoid.JumpHeight = jumpHeight
-        end
         monitorHumanoid(humanoid)
     end
 end
@@ -94,7 +121,7 @@ PlayerTab:AddSlider({
 
 PlayerTab:AddToggle({
     Name = "Скорость",
-    Default = true,
+    Default = false,
     Callback = function(State)
         walkSpeedEnabled = State
         local character = game.Players.LocalPlayer.Character
@@ -103,10 +130,8 @@ PlayerTab:AddToggle({
             if humanoid then
                 if walkSpeedEnabled then
                     humanoid.WalkSpeed = walkSpeed
-                    print("Скорость включена")
                 else
-                    humanoid.WalkSpeed = 16 -- Сбрасываем к стандартному значению
-                    print("Скорость выключена")
+                    resetHumanoid(humanoid)
                 end
             end
         end
@@ -137,7 +162,7 @@ PlayerTab:AddSlider({
 
 PlayerTab:AddToggle({
     Name = "Высота прыжка",
-    Default = true,
+    Default = false,
     Callback = function(State)
         jumpHeightEnabled = State
         local character = game.Players.LocalPlayer.Character
@@ -146,10 +171,8 @@ PlayerTab:AddToggle({
             if humanoid then
                 if jumpHeightEnabled then
                     humanoid.JumpHeight = jumpHeight
-                    print("Высота прыжка включена")
                 else
-                    humanoid.JumpHeight = 7 -- Сбрасываем к стандартному значению
-                    print("Высота прыжка выключена")
+                    resetHumanoid(humanoid)
                 end
             end
         end
@@ -174,15 +197,13 @@ PlayerTab:AddSlider({
 
 PlayerTab:AddToggle({
     Name = "Поле зрения",
-    Default = true,
+    Default = false,
     Callback = function(State)
         fovEnabled = State
         if fovEnabled then
             game.Workspace.CurrentCamera.FieldOfView = fieldOfView
-            print("Поле зрения включено")
         else
-            game.Workspace.CurrentCamera.FieldOfView = 70 -- Сбрасываем к стандартному значению
-            print("Поле зрения выключено")
+            resetFOV()
         end
     end
 })

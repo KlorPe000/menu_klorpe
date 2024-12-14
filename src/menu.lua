@@ -126,7 +126,7 @@ PlayerTab:AddSlider({
 })
 
 PlayerTab:AddToggle({
-    Name = "Скорость",
+    Name = "Вкл/Викл швидкість рух",
     Default = false,
     Callback = function(State)
         walkSpeedEnabled = State
@@ -167,7 +167,7 @@ PlayerTab:AddSlider({
 })
 
 PlayerTab:AddToggle({
-    Name = "Высота прыжка",
+    Name = "Вкл/Викл висота стрибка",
     Default = false,
     Callback = function(State)
         jumpHeightEnabled = State
@@ -202,7 +202,7 @@ PlayerTab:AddSlider({
 })
 
 PlayerTab:AddToggle({
-    Name = "Поле зрения",
+    Name = "Вкл/Викл поле зору",
     Default = false,
     Callback = function(State)
         fovEnabled = State

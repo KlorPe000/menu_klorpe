@@ -41,13 +41,14 @@ local function resetFOV()
     game.Workspace.CurrentCamera.FieldOfView = defaultFieldOfView
 end
 
--- Функция для блокировки изменений
+-- Функция для блокировки изменений и обновления слайдеров
 local function monitorHumanoid(humanoid)
     humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
         if walkSpeedEnabled and humanoid.WalkSpeed ~= walkSpeed then
             humanoid.WalkSpeed = walkSpeed
         else
-            script.Parent.PlayerTab:SetSliderValue("Швидкість руху", humanoid.WalkSpeed)
+            walkSpeed = humanoid.WalkSpeed
+            script.Parent.PlayerTab:SetSliderValue("Швидкість руху", walkSpeed)
         end
     end)
 
@@ -55,7 +56,8 @@ local function monitorHumanoid(humanoid)
         if jumpHeightEnabled and humanoid.JumpHeight ~= jumpHeight then
             humanoid.JumpHeight = jumpHeight
         else
-            script.Parent.PlayerTab:SetSliderValue("Висота стрибка", humanoid.JumpHeight)
+            jumpHeight = humanoid.JumpHeight
+            script.Parent.PlayerTab:SetSliderValue("Висота стрибка", jumpHeight)
         end
     end)
 
@@ -77,7 +79,8 @@ local function monitorFOV()
         if fovEnabled and game.Workspace.CurrentCamera.FieldOfView ~= fieldOfView then
             game.Workspace.CurrentCamera.FieldOfView = fieldOfView
         else
-            script.Parent.PlayerTab:SetSliderValue("Поле зору", game.Workspace.CurrentCamera.FieldOfView)
+            fieldOfView = game.Workspace.CurrentCamera.FieldOfView
+            script.Parent.PlayerTab:SetSliderValue("Поле зору", fieldOfView)
         end
     end)
 
@@ -213,7 +216,6 @@ PlayerTab:AddToggle({
         end
     end
 })
-
 
 local function activateFLY()
 

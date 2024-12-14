@@ -41,14 +41,13 @@ local function resetFOV()
     game.Workspace.CurrentCamera.FieldOfView = defaultFieldOfView
 end
 
--- Функция для блокировки изменений и обновления слайдеров
+-- Функция для блокировки изменений
 local function monitorHumanoid(humanoid)
     humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
         if walkSpeedEnabled and humanoid.WalkSpeed ~= walkSpeed then
             humanoid.WalkSpeed = walkSpeed
         else
-            walkSpeed = humanoid.WalkSpeed
-            script.Parent.PlayerTab:SetSliderValue("Швидкість руху", walkSpeed)
+            script.Parent.PlayerTab:SetSliderValue("Швидкість руху", humanoid.WalkSpeed)
         end
     end)
 
@@ -56,8 +55,7 @@ local function monitorHumanoid(humanoid)
         if jumpHeightEnabled and humanoid.JumpHeight ~= jumpHeight then
             humanoid.JumpHeight = jumpHeight
         else
-            jumpHeight = humanoid.JumpHeight
-            script.Parent.PlayerTab:SetSliderValue("Висота стрибка", jumpHeight)
+            script.Parent.PlayerTab:SetSliderValue("Висота стрибка", humanoid.JumpHeight)
         end
     end)
 
@@ -79,8 +77,7 @@ local function monitorFOV()
         if fovEnabled and game.Workspace.CurrentCamera.FieldOfView ~= fieldOfView then
             game.Workspace.CurrentCamera.FieldOfView = fieldOfView
         else
-            fieldOfView = game.Workspace.CurrentCamera.FieldOfView
-            script.Parent.PlayerTab:SetSliderValue("Поле зору", fieldOfView)
+            script.Parent.PlayerTab:SetSliderValue("Поле зору", game.Workspace.CurrentCamera.FieldOfView)
         end
     end)
 
@@ -115,8 +112,8 @@ PlayerTab:AddSlider({
     Increment = 1,
     ValueName = "Сила",
     Callback = function(Value)
+        walkSpeed = Value
         if walkSpeedEnabled then
-            walkSpeed = Value
             local character = game.Players.LocalPlayer.Character
             if character then
                 local humanoid = character:FindFirstChild("Humanoid")
@@ -156,8 +153,8 @@ PlayerTab:AddSlider({
     Increment = 1,
     ValueName = "Сила",
     Callback = function(Value)
+        jumpHeight = Value
         if jumpHeightEnabled then
-            jumpHeight = Value
             local character = game.Players.LocalPlayer.Character
             if character then
                 local humanoid = character:FindFirstChild("Humanoid")
@@ -197,8 +194,8 @@ PlayerTab:AddSlider({
     Increment = 1,
     ValueName = "Сила",
     Callback = function(Value)
+        fieldOfView = Value
         if fovEnabled then
-            fieldOfView = Value
             game.Workspace.CurrentCamera.FieldOfView = fieldOfView
         end
     end
@@ -216,6 +213,7 @@ PlayerTab:AddToggle({
         end
     end
 })
+
 
 local function activateFLY()
 

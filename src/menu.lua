@@ -93,10 +93,11 @@ PlayerTab:AddSlider({
     end
 })
 
-PlayerTab:AddButton({
-    Name = "Включить/Выключить скорость",
-    Callback = function()
-        walkSpeedEnabled = not walkSpeedEnabled
+PlayerTab:AddToggle({
+    Name = "Скорость",
+    Default = true,
+    Callback = function(State)
+        walkSpeedEnabled = State
         if walkSpeedEnabled then
             print("Скорость включена")
         else
@@ -127,10 +128,11 @@ PlayerTab:AddSlider({
     end
 })
 
-PlayerTab:AddButton({
-    Name = "Включить/Выключить высоту прыжка",
-    Callback = function()
-        jumpHeightEnabled = not jumpHeightEnabled
+PlayerTab:AddToggle({
+    Name = "Высота прыжка",
+    Default = true,
+    Callback = function(State)
+        jumpHeightEnabled = State
         if jumpHeightEnabled then
             print("Высота прыжка включена")
         else
@@ -155,10 +157,11 @@ PlayerTab:AddSlider({
     end
 })
 
-PlayerTab:AddButton({
-    Name = "Включить/Выключить поле зрения",
-    Callback = function()
-        fovEnabled = not fovEnabled
+PlayerTab:AddToggle({
+    Name = "Поле зрения",
+    Default = true,
+    Callback = function(State)
+        fovEnabled = State
         if fovEnabled then
             print("Поле зрения включено")
         else
@@ -166,6 +169,7 @@ PlayerTab:AddButton({
         end
     end
 })
+
 
 local function activateFLY()
 

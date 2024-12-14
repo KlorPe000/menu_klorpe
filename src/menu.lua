@@ -31,9 +31,6 @@ local defaultWalkSpeed = 16
 local defaultJumpHeight = 7
 local defaultFieldOfView = 70
 
--- Ссылки на слайдеры
-local walkSpeedSlider, jumpHeightSlider, fovSlider
-
 -- Функция для сброса значений на дефолтные
 local function resetHumanoid(humanoid)
     humanoid.WalkSpeed = defaultWalkSpeed
@@ -47,28 +44,18 @@ end
 -- Функция для блокировки изменений
 local function monitorHumanoid(humanoid)
     humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
-        if walkSpeedEnabled then
-            if humanoid.WalkSpeed ~= walkSpeed then
-                humanoid.WalkSpeed = walkSpeed
-            end
+        if walkSpeedEnabled and humanoid.WalkSpeed ~= walkSpeed then
+            humanoid.WalkSpeed = walkSpeed
         else
-            walkSpeed = humanoid.WalkSpeed
-            if walkSpeedSlider then
-                walkSpeedSlider:SetValue(walkSpeed)
-            end
+            script.Parent.PlayerTab:SetSliderValue("Швидкість руху", humanoid.WalkSpeed)
         end
     end)
 
     humanoid:GetPropertyChangedSignal("JumpHeight"):Connect(function()
-        if jumpHeightEnabled then
-            if humanoid.JumpHeight ~= jumpHeight then
-                humanoid.JumpHeight = jumpHeight
-            end
+        if jumpHeightEnabled and humanoid.JumpHeight ~= jumpHeight then
+            humanoid.JumpHeight = jumpHeight
         else
-            jumpHeight = humanoid.JumpHeight
-            if jumpHeightSlider then
-                jumpHeightSlider:SetValue(jumpHeight)
-            end
+            script.Parent.PlayerTab:SetSliderValue("Висота стрибка", humanoid.JumpHeight)
         end
     end)
 
@@ -87,15 +74,10 @@ end
 
 local function monitorFOV()
     game.Workspace.CurrentCamera:GetPropertyChangedSignal("FieldOfView"):Connect(function()
-        if fovEnabled then
-            if game.Workspace.CurrentCamera.FieldOfView ~= fieldOfView then
-                game.Workspace.CurrentCamera.FieldOfView = fieldOfView
-            end
+        if fovEnabled and game.Workspace.CurrentCamera.FieldOfView ~= fieldOfView then
+            game.Workspace.CurrentCamera.FieldOfView = fieldOfView
         else
-            fieldOfView = game.Workspace.CurrentCamera.FieldOfView
-            if fovSlider then
-                fovSlider:SetValue(fieldOfView)
-            end
+            script.Parent.PlayerTab:SetSliderValue("Поле зору", game.Workspace.CurrentCamera.FieldOfView)
         end
     end)
 
@@ -121,7 +103,7 @@ end
 
 monitorFOV()
 
-walkSpeedSlider = PlayerTab:AddSlider({
+PlayerTab:AddSlider({
     Name = "Швидкість руху",
     Min = 16,
     Max = 500,
@@ -154,15 +136,13 @@ PlayerTab:AddToggle({
             if humanoid then
                 if walkSpeedEnabled then
                     humanoid.WalkSpeed = walkSpeed
-                else
-                    resetHumanoid(humanoid)
                 end
             end
         end
     end
 })
 
-jumpHeightSlider = PlayerTab:AddSlider({
+PlayerTab:AddSlider({
     Name = "Висота стрибка",
     Min = 7,
     Max = 100,
@@ -195,15 +175,13 @@ PlayerTab:AddToggle({
             if humanoid then
                 if jumpHeightEnabled then
                     humanoid.JumpHeight = jumpHeight
-                else
-                    resetHumanoid(humanoid)
                 end
             end
         end
     end
 })
 
-fovSlider = PlayerTab:AddSlider({
+PlayerTab:AddSlider({
     Name = "Поле зору",
     Min = 70,
     Max = 120,
@@ -226,11 +204,10 @@ PlayerTab:AddToggle({
         fovEnabled = State
         if fovEnabled then
             game.Workspace.CurrentCamera.FieldOfView = fieldOfView
-        else
-            resetFOV()
         end
     end
 })
+
 
 
 local function activateFLY()

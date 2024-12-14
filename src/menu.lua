@@ -214,6 +214,77 @@ PlayerTab:AddToggle({
     end
 })
 
+game:GetService("UserInputService").JumpRequest:Connect(function()
+    if InfiniteJumpEnabled then
+        game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass('Humanoid'):ChangeState("Jumping")
+    end
+end)
+
+PlayerTab:AddToggle({
+    Name = "Бескінечні стрибки",
+    Default = false,
+    Callback = function(State)
+        InfiniteJumpEnabled = State
+    end
+})
+
+local Noclip = nil
+local Clip = nil
+local originalCollisions = {}
+
+local function saveCollisions()
+    for _, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+        if v:IsA('BasePart') then
+            originalCollisions[v] = v.CanCollide
+        end
+    end
+end
+
+function noclip()
+    Clip = false
+    saveCollisions()  
+    local function Nocl()
+        if Clip == false and game.Players.LocalPlayer.Character ~= nil then
+            for _, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+                if v:IsA('BasePart') and v.CanCollide and v.Name ~= floatName then
+                    v.CanCollide = false
+                end
+            end
+        end
+        wait(0.21) 
+    end
+    Noclip = game:GetService('RunService').Stepped:Connect(Nocl)
+end
+
+function clip()
+    if game.Players.LocalPlayer.Character.Humanoid:GetState() == Enum.HumanoidStateType.Physics then
+        repeat
+            wait(0.1)
+        until game.Players.LocalPlayer.Character.Humanoid:GetState() == Enum.HumanoidStateType.Seated or
+               game.Players.LocalPlayer.Character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall == false
+    end
+
+    if Noclip then Noclip:Disconnect() end
+    Clip = true
+    
+    for part, collision in pairs(originalCollisions) do
+        if part and part:IsA('BasePart') then
+            part.CanCollide = collision
+        end
+    end
+end
+
+PlayerTab:AddToggle({
+    Name = "Без зіткнень",
+    Default = false,
+    Callback = function(State)
+        if State then
+            noclip()
+        else
+            clip()
+        end
+    end
+})
 
 local function activateFLY()
 
@@ -720,78 +791,6 @@ PlayerTab:AddButton({
     Name = "Політ",
     Callback = function()
         activateFLY()
-    end
-})
-
-game:GetService("UserInputService").JumpRequest:Connect(function()
-    if InfiniteJumpEnabled then
-        game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass('Humanoid'):ChangeState("Jumping")
-    end
-end)
-
-PlayerTab:AddToggle({
-    Name = "Бескінечні стрибки",
-    Default = false,
-    Callback = function(State)
-        InfiniteJumpEnabled = State
-    end
-})
-
-local Noclip = nil
-local Clip = nil
-local originalCollisions = {}
-
-local function saveCollisions()
-    for _, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
-        if v:IsA('BasePart') then
-            originalCollisions[v] = v.CanCollide
-        end
-    end
-end
-
-function noclip()
-    Clip = false
-    saveCollisions()  
-    local function Nocl()
-        if Clip == false and game.Players.LocalPlayer.Character ~= nil then
-            for _, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
-                if v:IsA('BasePart') and v.CanCollide and v.Name ~= floatName then
-                    v.CanCollide = false
-                end
-            end
-        end
-        wait(0.21) 
-    end
-    Noclip = game:GetService('RunService').Stepped:Connect(Nocl)
-end
-
-function clip()
-    if game.Players.LocalPlayer.Character.Humanoid:GetState() == Enum.HumanoidStateType.Physics then
-        repeat
-            wait(0.1)
-        until game.Players.LocalPlayer.Character.Humanoid:GetState() == Enum.HumanoidStateType.Seated or
-               game.Players.LocalPlayer.Character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall == false
-    end
-
-    if Noclip then Noclip:Disconnect() end
-    Clip = true
-    
-    for part, collision in pairs(originalCollisions) do
-        if part and part:IsA('BasePart') then
-            part.CanCollide = collision
-        end
-    end
-end
-
-PlayerTab:AddToggle({
-    Name = "Без зіткнень",
-    Default = false,
-    Callback = function(State)
-        if State then
-            noclip()
-        else
-            clip()
-        end
     end
 })
 

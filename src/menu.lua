@@ -103,129 +103,114 @@ end
 
 monitorFOV()
 
-PlayerTab:AddCustom({
+PlayerTab:AddSlider({
     Name = "Швидкість руху",
-    Callback = function(CustomParent)
-        local slider = CustomParent:AddSlider({
-            Name = "",
-            Min = 16,
-            Max = 500,
-            Default = 16,
-            Color = Color3.fromRGB(255, 255, 255),
-            Increment = 1,
-            ValueName = "Сила",
-            Callback = function(Value)
-                walkSpeed = Value
+    Min = 16,
+    Max = 500,
+    Default = 16,
+    Color = Color3.fromRGB(255, 255, 255),
+    Increment = 1,
+    ValueName = "Сила",
+    Callback = function(Value)
+        walkSpeed = Value
+        if walkSpeedEnabled then
+            local character = game.Players.LocalPlayer.Character
+            if character then
+                local humanoid = character:FindFirstChild("Humanoid")
+                if humanoid then
+                    humanoid.WalkSpeed = walkSpeed
+                end
+            end
+        end
+    end
+})
+
+PlayerTab:AddToggle({
+    Name = "Скорость",
+    Default = false,
+    Callback = function(State)
+        walkSpeedEnabled = State
+        local character = game.Players.LocalPlayer.Character
+        if character then
+            local humanoid = character:FindFirstChild("Humanoid")
+            if humanoid then
                 if walkSpeedEnabled then
-                    local character = game.Players.LocalPlayer.Character
-                    if character then
-                        local humanoid = character:FindFirstChild("Humanoid")
-                        if humanoid then
-                            humanoid.WalkSpeed = walkSpeed
-                        end
-                    end
-                end
-            end
-        })
-
-        CustomParent:AddToggle({
-            Name = "",
-            Default = false,
-            Callback = function(State)
-                walkSpeedEnabled = State
-                local character = game.Players.LocalPlayer.Character
-                if character then
-                    local humanoid = character:FindFirstChild("Humanoid")
-                    if humanoid then
-                        if walkSpeedEnabled then
-                            humanoid.WalkSpeed = walkSpeed
-                        else
-                            resetHumanoid(humanoid)
-                        end
-                    end
-                end
-            end
-        })
-    end
-})
-
-PlayerTab:AddCustom({
-    Name = "Висота стрибка",
-    Callback = function(CustomParent)
-        local slider = CustomParent:AddSlider({
-            Name = "",
-            Min = 7,
-            Max = 100,
-            Default = 7,
-            Color = Color3.fromRGB(255, 255, 255),
-            Increment = 1,
-            ValueName = "Сила",
-            Callback = function(Value)
-                jumpHeight = Value
-                if jumpHeightEnabled then
-                    local character = game.Players.LocalPlayer.Character
-                    if character then
-                        local humanoid = character:FindFirstChild("Humanoid")
-                        if humanoid then
-                            humanoid.JumpHeight = jumpHeight
-                        end
-                    end
-                end
-            end
-        })
-
-        CustomParent:AddToggle({
-            Name = "",
-            Default = false,
-            Callback = function(State)
-                jumpHeightEnabled = State
-                local character = game.Players.LocalPlayer.Character
-                if character then
-                    local humanoid = character:FindFirstChild("Humanoid")
-                    if humanoid then
-                        if jumpHeightEnabled then
-                            humanoid.JumpHeight = jumpHeight
-                        else
-                            resetHumanoid(humanoid)
-                        end
-                    end
-                end
-            end
-        })
-    end
-})
-
-PlayerTab:AddCustom({
-    Name = "Поле зору",
-    Callback = function(CustomParent)
-        local slider = CustomParent:AddSlider({
-            Name = "",
-            Min = 70,
-            Max = 120,
-            Default = 70,
-            Color = Color3.fromRGB(255, 255, 255),
-            Increment = 1,
-            ValueName = "Сила",
-            Callback = function(Value)
-                fieldOfView = Value
-                if fovEnabled then
-                    game.Workspace.CurrentCamera.FieldOfView = fieldOfView
-                end
-            end
-        })
-
-        CustomParent:AddToggle({
-            Name = "",
-            Default = false,
-            Callback = function(State)
-                fovEnabled = State
-                if fovEnabled then
-                    game.Workspace.CurrentCamera.FieldOfView = fieldOfView
+                    humanoid.WalkSpeed = walkSpeed
                 else
-                    resetFOV()
+                    resetHumanoid(humanoid)
                 end
             end
-        })
+        end
+    end
+})
+
+PlayerTab:AddSlider({
+    Name = "Висота стрибка",
+    Min = 7,
+    Max = 100,
+    Default = 7,
+    Color = Color3.fromRGB(255, 255, 255),
+    Increment = 1,
+    ValueName = "Сила",
+    Callback = function(Value)
+        jumpHeight = Value
+        if jumpHeightEnabled then
+            local character = game.Players.LocalPlayer.Character
+            if character then
+                local humanoid = character:FindFirstChild("Humanoid")
+                if humanoid then
+                    humanoid.JumpHeight = jumpHeight
+                end
+            end
+        end
+    end
+})
+
+PlayerTab:AddToggle({
+    Name = "Высота прыжка",
+    Default = false,
+    Callback = function(State)
+        jumpHeightEnabled = State
+        local character = game.Players.LocalPlayer.Character
+        if character then
+            local humanoid = character:FindFirstChild("Humanoid")
+            if humanoid then
+                if jumpHeightEnabled then
+                    humanoid.JumpHeight = jumpHeight
+                else
+                    resetHumanoid(humanoid)
+                end
+            end
+        end
+    end
+})
+
+PlayerTab:AddSlider({
+    Name = "Поле зору",
+    Min = 70,
+    Max = 120,
+    Default = 70,
+    Color = Color3.fromRGB(255, 255, 255),
+    Increment = 1,
+    ValueName = "Сила",
+    Callback = function(Value)
+        fieldOfView = Value
+        if fovEnabled then
+            game.Workspace.CurrentCamera.FieldOfView = fieldOfView
+        end
+    end
+})
+
+PlayerTab:AddToggle({
+    Name = "Поле зрения",
+    Default = false,
+    Callback = function(State)
+        fovEnabled = State
+        if fovEnabled then
+            game.Workspace.CurrentCamera.FieldOfView = fieldOfView
+        else
+            resetFOV()
+        end
     end
 })
 

@@ -46,12 +46,16 @@ local function monitorHumanoid(humanoid)
     humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
         if walkSpeedEnabled and humanoid.WalkSpeed ~= walkSpeed then
             humanoid.WalkSpeed = walkSpeed
+        else
+            script.Parent.PlayerTab:SetSliderValue("Швидкість руху", humanoid.WalkSpeed)
         end
     end)
 
     humanoid:GetPropertyChangedSignal("JumpHeight"):Connect(function()
         if jumpHeightEnabled and humanoid.JumpHeight ~= jumpHeight then
             humanoid.JumpHeight = jumpHeight
+        else
+            script.Parent.PlayerTab:SetSliderValue("Висота стрибка", humanoid.JumpHeight)
         end
     end)
 
@@ -72,6 +76,8 @@ local function monitorFOV()
     game.Workspace.CurrentCamera:GetPropertyChangedSignal("FieldOfView"):Connect(function()
         if fovEnabled and game.Workspace.CurrentCamera.FieldOfView ~= fieldOfView then
             game.Workspace.CurrentCamera.FieldOfView = fieldOfView
+        else
+            script.Parent.PlayerTab:SetSliderValue("Поле зору", game.Workspace.CurrentCamera.FieldOfView)
         end
     end)
 

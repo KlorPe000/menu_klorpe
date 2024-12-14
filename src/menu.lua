@@ -136,6 +136,8 @@ PlayerTab:AddToggle({
             if humanoid then
                 if walkSpeedEnabled then
                     humanoid.WalkSpeed = walkSpeed
+                else
+                    resetHumanoid(humanoid)
                 end
             end
         end
@@ -175,6 +177,8 @@ PlayerTab:AddToggle({
             if humanoid then
                 if jumpHeightEnabled then
                     humanoid.JumpHeight = jumpHeight
+                else
+                    resetHumanoid(humanoid)
                 end
             end
         end
@@ -204,6 +208,8 @@ PlayerTab:AddToggle({
         fovEnabled = State
         if fovEnabled then
             game.Workspace.CurrentCamera.FieldOfView = fieldOfView
+        else
+            resetFOV()
         end
     end
 })

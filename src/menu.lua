@@ -21,28 +21,29 @@ local walkSpeed = 16
 local jumpHeight = 7
 local fieldOfView = 70  -- Начальное значение FOV
 
+-- Переменные для включения и выключения изменений
+local walkSpeedEnabled = true
+local jumpHeightEnabled = true
+local fovEnabled = true
+
 -- Функция для блокировки изменений
 local function monitorHumanoid(humanoid)
-    -- Блокируем изменение WalkSpeed
     humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
         if humanoid.WalkSpeed ~= walkSpeed then
             humanoid.WalkSpeed = walkSpeed
         end
     end)
 
-    -- Блокируем изменение JumpHeight
     humanoid:GetPropertyChangedSignal("JumpHeight"):Connect(function()
         if humanoid.JumpHeight ~= jumpHeight then
             humanoid.JumpHeight = jumpHeight
         end
     end)
 
-    -- Устанавливаем начальные значения
     humanoid.WalkSpeed = walkSpeed
     humanoid.JumpHeight = jumpHeight
 end
 
--- Функция для блокировки изменений FOV
 local function monitorFOV()
     game.Workspace.CurrentCamera:GetPropertyChangedSignal("FieldOfView"):Connect(function()
         if game.Workspace.CurrentCamera.FieldOfView ~= fieldOfView then
@@ -50,28 +51,24 @@ local function monitorFOV()
         end
     end)
 
-    -- Устанавливаем начальное значение FOV
     game.Workspace.CurrentCamera.FieldOfView = fieldOfView
 end
 
 local function setupCharacter(character)
-    local humanoid = character:WaitForChild("Humanoid") -- Ждем появления Humanoid
+    local humanoid = character:WaitForChild("Humanoid")
     if humanoid then
-        humanoid.WalkSpeed = walkSpeed -- Устанавливаем скорость
-        humanoid.JumpHeight = jumpHeight -- Устанавливаем высоту прыжка
-        monitorHumanoid(humanoid) -- Подключаем блокировку изменений
+        humanoid.WalkSpeed = walkSpeed
+        humanoid.JumpHeight = jumpHeight
+        monitorHumanoid(humanoid)
     end
 end
 
--- Отслеживаем, когда персонаж игрока появляется
 game.Players.LocalPlayer.CharacterAdded:Connect(setupCharacter)
 
--- Для уже существующего персонажа
 if game.Players.LocalPlayer.Character then
     setupCharacter(game.Players.LocalPlayer.Character)
 end
 
--- Запускаем защиту FOV
 monitorFOV()
 
 PlayerTab:AddSlider({
@@ -83,13 +80,27 @@ PlayerTab:AddSlider({
     Increment = 1,
     ValueName = "Сила",
     Callback = function(Value)
-        walkSpeed = Value
-        local character = game.Players.LocalPlayer.Character
-        if character then
-            local humanoid = character:FindFirstChild("Humanoid")
-            if humanoid then
-                humanoid.WalkSpeed = walkSpeed
+        if walkSpeedEnabled then
+            walkSpeed = Value
+            local character = game.Players.LocalPlayer.Character
+            if character then
+                local humanoid = character:FindFirstChild("Humanoid")
+                if humanoid then
+                    humanoid.WalkSpeed = walkSpeed
+                end
             end
+        end
+    end
+})
+
+PlayerTab:AddButton({
+    Name = "Включить/Выключить скорость",
+    Callback = function()
+        walkSpeedEnabled = not walkSpeedEnabled
+        if walkSpeedEnabled then
+            print("Скорость включена")
+        else
+            print("Скорость выключена")
         end
     end
 })
@@ -103,13 +114,27 @@ PlayerTab:AddSlider({
     Increment = 1,
     ValueName = "Сила",
     Callback = function(Value)
-        jumpHeight = Value
-        local character = game.Players.LocalPlayer.Character
-        if character then
-            local humanoid = character:FindFirstChild("Humanoid")
-            if humanoid then
-                humanoid.JumpHeight = jumpHeight
+        if jumpHeightEnabled then
+            jumpHeight = Value
+            local character = game.Players.LocalPlayer.Character
+            if character then
+                local humanoid = character:FindFirstChild("Humanoid")
+                if humanoid then
+                    humanoid.JumpHeight = jumpHeight
+                end
             end
+        end
+    end
+})
+
+PlayerTab:AddButton({
+    Name = "Включить/Выключить высоту прыжка",
+    Callback = function()
+        jumpHeightEnabled = not jumpHeightEnabled
+        if jumpHeightEnabled then
+            print("Высота прыжка включена")
+        else
+            print("Высота прыжка выключена")
         end
     end
 })
@@ -123,8 +148,22 @@ PlayerTab:AddSlider({
     Increment = 1,
     ValueName = "Сила",
     Callback = function(Value)
-        fieldOfView = Value
-        game.Workspace.CurrentCamera.FieldOfView = fieldOfView
+        if fovEnabled then
+            fieldOfView = Value
+            game.Workspace.CurrentCamera.FieldOfView = fieldOfView
+        end
+    end
+})
+
+PlayerTab:AddButton({
+    Name = "Включить/Выключить поле зрения",
+    Callback = function()
+        fovEnabled = not fovEnabled
+        if fovEnabled then
+            print("Поле зрения включено")
+        else
+            print("Поле зрения выключено")
+        end
     end
 })
 

@@ -1376,62 +1376,78 @@ local function activateESP()
     end)
 end
 
-local function activateHighlight()
-    local Players = game:GetService("Players")
-    local localPlayer = Players.LocalPlayer
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
 
-    local function applyHighlight(player)
-        if player == localPlayer then return end -- Пропускаем локального игрока
+local HighlightEnabled = true -- Переменная для управления включением/выключением функции
+local UseTeamColorForHighlight = true -- Использовать ли командные цвета для Highlight
 
-        local function onCharacterAdded(character)
-            if not HighlightEnabled then return end
-            local highlight = Instance.new("Highlight")
-            highlight.Archivable = true
-            highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-            highlight.Enabled = true
+local function applyHighlight(player)
+    if player == localPlayer then return end -- Пропускаем локального игрока
+
+    local function createHighlightForCharacter(character)
+        -- Проверяем, включен ли Highlight
+        if not HighlightEnabled or not character then return end
+        
+        -- Создаем Highlight и настраиваем
+        local highlight = Instance.new("Highlight")
+        highlight.Archivable = true
+        highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        highlight.Enabled = true
+
+        -- Устанавливаем цвет на основе команды или стандартный
+        if UseTeamColorForHighlight and player.Team then
+            highlight.FillColor = player.Team.TeamColor.Color
+        else
+            highlight.FillColor = Color3.fromRGB(255, 0, 4)
+        end
+
+        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+        highlight.FillTransparency = 0.5
+        highlight.OutlineTransparency = 0
+        highlight.Parent = character
+
+        -- Удаляем Highlight при удалении персонажа
+        player.CharacterRemoving:Connect(function()
+            if highlight then
+                highlight:Destroy()
+            end
+        end)
+
+        -- Изменение цвета при смене команды
+        player:GetPropertyChangedSignal("Team"):Connect(function()
             if UseTeamColorForHighlight and player.Team then
                 highlight.FillColor = player.Team.TeamColor.Color
             else
                 highlight.FillColor = Color3.fromRGB(255, 0, 4)
             end
-            highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-            highlight.FillTransparency = 0.5
-            highlight.OutlineTransparency = 0
-            highlight.Parent = character
-
-            player.CharacterRemoving:Connect(function()
-                if highlight then
-                    highlight:Destroy()
-                end
-            end)
-
-            player:GetPropertyChangedSignal("Team"):Connect(function()
-                if UseTeamColorForHighlight and player.Team then
-                    highlight.FillColor = player.Team.TeamColor.Color
-                else
-                    highlight.FillColor = Color3.fromRGB(255, 0, 4)
-                end
-            end)
-        end
-
-        if player.Character then
-            onCharacterAdded(player.Character)
-        end
-
-        player.CharacterAdded:Connect(onCharacterAdded)
+        end)
     end
 
+    -- Если у игрока уже есть персонаж
+    if player.Character then
+        createHighlightForCharacter(player.Character)
+    end
+
+    -- Подключаемся к событию появления персонажа
+    player.CharacterAdded:Connect(createHighlightForCharacter)
+end
+
+-- Включение Highlight для всех игроков
+local function activateHighlight()
     for _, player in pairs(Players:GetPlayers()) do
         applyHighlight(player)
     end
 
+    -- Подключаемся к событию добавления нового игрока
     Players.PlayerAdded:Connect(function(player)
         applyHighlight(player)
     end)
 end
 
+-- Отключение Highlight
 local function deactivateHighlight()
-    for _, player in pairs(game.Players:GetPlayers()) do
+    for _, player in pairs(Players:GetPlayers()) do
         if player.Character then
             for _, highlight in pairs(player.Character:GetChildren()) do
                 if highlight:IsA("Highlight") then

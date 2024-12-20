@@ -209,7 +209,7 @@ PlayerTab:AddSlider({
     end
 })
 
-PlayerTab:AddToggle({
+local toggleButton = PlayerTab:AddToggle({
     Name = "Вкл/Викл поле зору",
     Default = false,
     Callback = function(State)
@@ -221,6 +221,29 @@ PlayerTab:AddToggle({
         end
     end
 })
+
+local keyBind = " " 
+PlayerTab:AddTextbox({
+    Name = "Введите клавишу для переключения",
+    Default = keyBind,
+    TextDisappear = false,
+    Callback = function(Value)
+        keyBind = Value:upper()
+    end
+})
+
+UserInputService = game:GetService("UserInputService")
+UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+    if not gameProcessedEvent and input.KeyCode == Enum.KeyCode[keyBind] then
+        fovEnabled = not fovEnabled
+        toggleButton:Set(fovEnabled)
+        if fovEnabled then
+            game.Workspace.CurrentCamera.FieldOfView = fieldOfView
+        else
+            resetFOV()
+        end
+    end
+end)
 
 game:GetService("UserInputService").JumpRequest:Connect(function()
     if InfiniteJumpEnabled then

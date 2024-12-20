@@ -195,7 +195,7 @@ local Section = PlayerTab:AddSection({
 
 PlayerTab:AddSlider({
     Name = "Поле зору",
-    Min = 5,
+    Min = 20,
     Max = 120,
     Default = 70,
     Color = Color3.fromRGB(255, 255, 255),
@@ -222,13 +222,16 @@ local toggleButton = PlayerTab:AddToggle({
     end
 })
 
-local keyBind = " " 
+local keyBind = "" 
+
 PlayerTab:AddTextbox({
-    Name = "Введите клавишу для переключения",
+    Name = "Введіть клавішу перемикання",
     Default = keyBind,
     TextDisappear = false,
     Callback = function(Value)
-        keyBind = Value:upper()
+        if #Value == 1 then
+            keyBind = Value:upper()
+        end
     end
 })
 

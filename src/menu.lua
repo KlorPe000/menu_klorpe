@@ -195,7 +195,7 @@ local Section = PlayerTab:AddSection({
 
 PlayerTab:AddSlider({
     Name = "Поле зору",
-    Min = 70,
+    Min = 20,
     Max = 120,
     Default = 70,
     Color = Color3.fromRGB(255, 255, 255),

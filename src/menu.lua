@@ -222,19 +222,6 @@ local toggleButton = PlayerTab:AddToggle({
     end
 })
 
-local keyBind = "" 
-
-PlayerTab:AddTextbox({
-    Name = "Введіть клавішу перемикання",
-    Default = keyBind,
-    TextDisappear = false,
-    Callback = function(Value)
-        if #Value == 1 then
-            keyBind = Value:upper()
-        end
-    end
-})
-
 UserInputService = game:GetService("UserInputService")
 UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
     if not gameProcessedEvent and input.KeyCode == Enum.KeyCode[keyBind] then

@@ -298,7 +298,9 @@ PlayerTab:AddToggle({
     end
 })
 
-local function activateFLY()
+local function activateuserFLY()
+    if flyButtonExists2 then return end -- Если кнопка уже существует, ничего не делаем
+    flyButtonExists2 = true -- Устанавливаем флаг
 
     local main = Instance.new("ScreenGui")
     local Frame = Instance.new("Frame")
@@ -315,8 +317,9 @@ local function activateFLY()
     
     local main = Instance.new("ScreenGui")
     main.Name = "main"
-    main.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    main.Parent = game:GetService("CoreGui")
     main.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    main.IgnoreGuiInset = true
     main.ResetOnSpawn = false
     
     local Frame = Instance.new("Frame")
@@ -324,37 +327,14 @@ local function activateFLY()
     Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
     Frame.BorderColor3 = Color3.fromRGB(150, 150, 150)
     Frame.Position = UDim2.new(0.100320168, -0, 0.379746825, 0)
-    Frame.Size = UDim2.new(0, 189, 0, 56)
-    
-    local up = Instance.new("TextButton")
-    up.Name = "up"
-    up.Parent = Frame
-    up.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-    up.BorderColor3 = Color3.fromRGB(150, 150, 150)
-    up.Size = UDim2.new(0, 44, 0, 28)
-    up.Font = Enum.Font.SourceSans
-    up.Text = "Більше"
-    up.TextColor3 = Color3.fromRGB(240, 240, 240)
-    up.TextSize = 14.000
-    
-    local down = Instance.new("TextButton")
-    down.Name = "down"
-    down.Parent = Frame
-    down.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-    down.BorderColor3 = Color3.fromRGB(150, 150, 150)
-    down.Position = UDim2.new(0, 0, 0.491228074, 1)
-    down.Size = UDim2.new(0, 44, 0, 28)
-    down.Font = Enum.Font.SourceSans
-    down.Text = "Менше"
-    down.TextColor3 = Color3.fromRGB(240, 240, 240)
-    down.TextSize = 14.000
+    Frame.Size = UDim2.new(0, 145, 0, 56)
     
     local onof = Instance.new("TextButton")
     onof.Name = "onof"
     onof.Parent = Frame
     onof.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
     onof.BorderColor3 = Color3.fromRGB(150, 150, 150)
-    onof.Position = UDim2.new(0.702823281, 0, 0.491228074, 1)
+    onof.Position = UDim2.new(0.613, 0, 0.491228074, 1)
     onof.Size = UDim2.new(0, 56, 0, 28)
     onof.Font = Enum.Font.SourceSans
     onof.Text = "Політ"
@@ -365,10 +345,10 @@ local function activateFLY()
     TextLabel.Parent = Frame
     TextLabel.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
     TextLabel.BorderColor3 = Color3.fromRGB(150, 150, 150)
-    TextLabel.Position = UDim2.new(0.469327301, 0, -0.001, 0)  -- Изменена позиция, чтобы текст был сверху
+    TextLabel.Position = UDim2.new(0.31, 0, -0.001, 0)
     TextLabel.Size = UDim2.new(0, 100, 0, 27)
     TextLabel.Font = Enum.Font.SourceSans
-    TextLabel.Text = "Fly KlorPe"
+    TextLabel.Text = "Fly User"
     TextLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
     TextLabel.TextScaled = true
     TextLabel.TextSize = 14.000
@@ -379,7 +359,7 @@ local function activateFLY()
     plus.Parent = Frame
     plus.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
     plus.BorderColor3 = Color3.fromRGB(150, 150, 150)
-    plus.Position = UDim2.new(0.231578946, 0, 0, 0)
+    plus.Position = UDim2.new(0, 0, 0, 0)
     plus.Size = UDim2.new(0, 44, 0, 28)
     plus.Font = Enum.Font.SourceSans
     plus.Text = "+"
@@ -393,8 +373,8 @@ local function activateFLY()
     speed.Parent = Frame
     speed.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
     speed.BorderColor3 = Color3.fromRGB(150, 150, 150)
-    speed.Position = UDim2.new(0.468421042, 0, 0.491228074, 1)
-    speed.Size = UDim2.new(0, 44, 0, 28)
+    speed.Position = UDim2.new(0.31, 0, 0.491228074, 1)
+    speed.Size = UDim2.new(0, 43, 0, 28)
     speed.Font = Enum.Font.SourceSans
     speed.Text = "1"
     speed.TextColor3 = Color3.fromRGB(240, 240, 240)
@@ -407,7 +387,7 @@ local function activateFLY()
     mine.Parent = Frame
     mine.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
     mine.BorderColor3 = Color3.fromRGB(150, 150, 150)
-    mine.Position = UDim2.new(0.231578946, 0, 0.491228074, 1)
+    mine.Position = UDim2.new(0, 0, 0.491228074, 1)
     mine.Size = UDim2.new(0, 44, 0, 28)
     mine.Font = Enum.Font.SourceSans
     mine.Text = "-"
@@ -426,29 +406,7 @@ local function activateFLY()
     closebutton.Text = "X"
     closebutton.TextSize = 30
     closebutton.Position = UDim2.new(0, 0, -1, 27)
-    
-    local mini = Instance.new("TextButton")
-    mini.Name = "minimize"
-    mini.Parent = Frame
-    mini.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-    mini.BorderColor3 = Color3.fromRGB(150, 150, 150)
-    mini.Font = Enum.Font.SourceSans
-    mini.Size = UDim2.new(0, 44, 0, 28)
-    mini.Text = "-"
-    mini.TextSize = 40
-    mini.Position = UDim2.new(0, 44, -1, 27)
-    
-    local mini2 = Instance.new("TextButton")
-    mini2.Name = "minimize2"
-    mini2.Parent = Frame
-    mini2.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-    mini2.BorderColor3 = Color3.fromRGB(150, 150, 150)
-    mini2.Font = Enum.Font.SourceSans
-    mini2.Size = UDim2.new(0, 44, 0, 28)
-    mini2.Text = "+"
-    mini2.TextSize = 40
-    mini2.Position = UDim2.new(0, 44, -1, 57)
-    mini2.Visible = false
+    closebutton.ZIndex = 10
     
     speeds = 1
     
@@ -458,12 +416,6 @@ local function activateFLY()
     local hum = chr and chr:FindFirstChildWhichIsA("Humanoid")
     
     nowe = false
-    
-    game:GetService("StarterGui"):SetCore("SendNotification", { 
-        Title = "Fly KlorPe";
-        Text = "By KlorPe";
-        Icon = "rbxthumb://type=Asset&id=5107182114&w=150&h=150"})
-    Duration = 5;
     
     Frame.Active = true -- main = gui
     Frame.Draggable = true
@@ -769,40 +721,256 @@ local function activateFLY()
     
     closebutton.MouseButton1Click:Connect(function()
         main:Destroy()
-    end)
-    
-    mini.MouseButton1Click:Connect(function()
-        up.Visible = false
-        down.Visible = false
-        onof.Visible = false
-        plus.Visible = false
-        speed.Visible = false
-        mine.Visible = false
-        mini.Visible = false
-        mini2.Visible = true
-        main.Frame.BackgroundTransparency = 1
-        closebutton.Position =  UDim2.new(0, 0, -1, 57)
-    end)
-    
-    mini2.MouseButton1Click:Connect(function()
-        up.Visible = true
-        down.Visible = true
-        onof.Visible = true
-        plus.Visible = true
-        speed.Visible = true
-        mine.Visible = true
-        mini.Visible = true
-        mini2.Visible = false
-        main.Frame.BackgroundTransparency = 0 
-        closebutton.Position =  UDim2.new(0, 0, -1, 27)
-    end)
+        flyButtonExists2 = false -- Сбрасываем флаг, чтобы можно было снова создать кнопку
+    end) 
 
 end
 
 PlayerTab:AddButton({
-    Name = "Політ",
+    Name = "Політ гравцем",
     Callback = function()
-        activateFLY()
+        activateuserFLY()
+    end
+})
+
+--Механика полета
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local speaker = Players.LocalPlayer
+local flying = false
+local speed = 25
+local minSpeed = 25
+local maxSpeed = 1000
+local ctrl = {f = 0, b = 0, l = 0, r = 0}
+local vehicle = nil
+
+-- Отслеживание, садится ли игрок в транспортное средство
+local function onSeated(active, seat)
+    if active and seat:IsA("VehicleSeat") then
+        vehicle = seat
+        print("Игрок сел в транспортное средство:", seat.Name)
+    else
+        vehicle = nil
+        print("Игрок вышел из транспортного средства")
+    end
+end
+
+-- Связываем событие с Humanoid персонажа
+local function setupSeatedEvent()
+    local character = speaker.Character or speaker.CharacterAdded:Wait()
+    local humanoid = character:WaitForChild("Humanoid")
+    humanoid.Seated:Connect(onSeated)
+end
+
+-- Включение или отключение полета
+local function toggleFly()
+    flying = not flying
+    if flying then
+        if not vehicle then
+            print("Вы не находитесь в транспортном средстве!")
+            flying = false
+            return
+        end
+
+        print("Транспортное средство найдено:", vehicle.Name)
+
+        local bg = Instance.new("BodyGyro", vehicle)
+        bg.P = 9e4
+        bg.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+        bg.cframe = vehicle.CFrame
+
+        local bv = Instance.new("BodyVelocity", vehicle)
+        bv.velocity = Vector3.new(0, 0.1, 0)
+        bv.maxForce = Vector3.new(9e9, 9e9, 9e9)
+
+        spawn(function()
+            while flying do
+                RunService.RenderStepped:Wait()
+
+                bv.velocity = (
+                    (workspace.CurrentCamera.CoordinateFrame.lookVector * (ctrl.f + ctrl.b)) +
+                    ((workspace.CurrentCamera.CoordinateFrame * CFrame.new(ctrl.l + ctrl.r, (ctrl.f + ctrl.b) * .2, 0).p) - workspace.CurrentCamera.CoordinateFrame.p)
+                ) * speed
+                bg.cframe = workspace.CurrentCamera.CoordinateFrame
+            end
+
+            bg:Destroy()
+            bv:Destroy()
+        end)
+    else
+        -- Отключаем полет
+        print("Полет выключен.")
+    end
+end
+
+-- Обработка ввода
+UserInputService.InputBegan:Connect(function(input)
+    if flying then
+        if input.KeyCode == Enum.KeyCode.W then
+            ctrl.f = 1
+        elseif input.KeyCode == Enum.KeyCode.S then
+            ctrl.b = -1
+        elseif input.KeyCode == Enum.KeyCode.A then
+            ctrl.l = -1
+        elseif input.KeyCode == Enum.KeyCode.D then
+            ctrl.r = 1
+        end
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if flying then
+        if input.KeyCode == Enum.KeyCode.W then
+            ctrl.f = 0
+        elseif input.KeyCode == Enum.KeyCode.S then
+            ctrl.b = 0
+        elseif input.KeyCode == Enum.KeyCode.A then
+            ctrl.l = 0
+        elseif input.KeyCode == Enum.KeyCode.D then
+            ctrl.r = 0
+        end
+    end
+end)
+
+setupSeatedEvent()
+
+speaker.CharacterAdded:Connect(setupSeatedEvent)
+
+-- Интерфейс кнопки
+local function activatecarFLY()
+    if flyButtonExists1 then return end -- Если кнопка уже существует, ничего не делаем
+    flyButtonExists1 = true -- Устанавливаем флаг
+
+    local minSpeed = 25
+    local maxSpeed = 1000
+
+    local main = Instance.new("ScreenGui")
+    local Frame = Instance.new("Frame")
+    local up = Instance.new("TextButton")
+    local down = Instance.new("TextButton")
+    local onof = Instance.new("TextButton")
+    local TextLabel = Instance.new("TextLabel")
+    local plus = Instance.new("TextButton")
+    local speedLabel = Instance.new("TextLabel")
+    local mine = Instance.new("TextButton")
+    local closebutton = Instance.new("TextButton")
+
+    main.Name = "main"
+    main.Parent = game:GetService("CoreGui")
+    main.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    main.IgnoreGuiInset = true
+    main.ResetOnSpawn = false
+
+    Frame.Parent = main
+    Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    Frame.BorderColor3 = Color3.fromRGB(150, 150, 150)
+    Frame.Position = UDim2.new(0.100320168, -0, 0.500, 0)
+    Frame.Size = UDim2.new(0, 145, 0, 56)
+
+    onof.Name = "onof"
+    onof.Parent = Frame
+    onof.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    onof.BorderColor3 = Color3.fromRGB(150, 150, 150)
+    onof.Position = UDim2.new(0.613, 0, 0.491228074, 1)
+    onof.Size = UDim2.new(0, 56, 0, 28)
+    onof.Font = Enum.Font.SourceSans
+    onof.Text = "Політ"
+    onof.TextColor3 = Color3.fromRGB(240, 240, 240)
+    onof.TextSize = 14
+
+    onof.MouseButton1Click:Connect(function()
+        toggleFly()
+    end)
+
+    TextLabel.Parent = Frame
+    TextLabel.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    TextLabel.BorderColor3 = Color3.fromRGB(150, 150, 150)
+    TextLabel.Position = UDim2.new(0.31, 0, 0, 0)
+    TextLabel.Size = UDim2.new(0, 100, 0, 27)
+    TextLabel.Font = Enum.Font.SourceSans
+    TextLabel.Text = "Fly Vehicle"
+    TextLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
+    TextLabel.TextScaled = true
+    TextLabel.TextSize = 14
+    TextLabel.TextWrapped = true
+
+    speedLabel.Name = "speedLabel"
+    speedLabel.Parent = Frame
+    speedLabel.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    speedLabel.BorderColor3 = Color3.fromRGB(150, 150, 150)
+    speedLabel.Position = UDim2.new(0.31, 0, 0.491228074, 1)
+    speedLabel.Size = UDim2.new(0, 43, 0, 28)
+    speedLabel.Font = Enum.Font.SourceSans
+    speedLabel.Text = tostring(speed)
+    speedLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
+    speedLabel.TextScaled = true
+    speedLabel.TextSize = 14
+    speedLabel.TextWrapped = true
+
+    plus.Name = "plus"
+    plus.Parent = Frame
+    plus.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    plus.BorderColor3 = Color3.fromRGB(150, 150, 150)
+    plus.Position = UDim2.new(0, 0, 0, 0)
+    plus.Size = UDim2.new(0, 44, 0, 28)
+    plus.Font = Enum.Font.SourceSans
+    plus.Text = "+"
+    plus.TextColor3 = Color3.fromRGB(240, 240, 240)
+    plus.TextScaled = true
+    plus.TextSize = 14
+    plus.TextWrapped = true
+
+    plus.MouseButton1Click:Connect(function()
+        speed = math.min(maxSpeed, speed + 25) -- Увеличиваем скорость
+        speedLabel.Text = tostring(speed)
+    end)
+
+    mine.Name = "mine"
+    mine.Parent = Frame
+    mine.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    mine.BorderColor3 = Color3.fromRGB(150, 150, 150)
+    mine.Position = UDim2.new(0, 0, 0.491228074, 1)
+    mine.Size = UDim2.new(0, 44, 0, 28)
+    mine.Font = Enum.Font.SourceSans
+    mine.Text = "-"
+    mine.TextColor3 = Color3.fromRGB(240, 240, 240)
+    mine.TextScaled = true
+    mine.TextSize = 14
+    mine.TextWrapped = true
+
+    mine.MouseButton1Click:Connect(function()
+        speed = math.max(minSpeed, speed - 25) -- Уменьшаем скорость
+        speedLabel.Text = tostring(speed)
+    end)
+
+    closebutton.Name = "Close"
+    closebutton.Parent = Frame
+    closebutton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    closebutton.BorderColor3 = Color3.fromRGB(150, 150, 150)
+    closebutton.Font = Enum.Font.SourceSans
+    closebutton.Size = UDim2.new(0, 44, 0, 28)
+    closebutton.Text = "X"
+    closebutton.TextSize = 30
+    closebutton.Position = UDim2.new(0, 0, -1, 27)
+    closebutton.ZIndex = 10
+
+    closebutton.MouseButton1Click:Connect(function()
+        if main and main.Parent then
+            main:Destroy()
+            flyButtonExists1 = false
+        end
+    end)
+
+    Frame.Active = true
+    Frame.Draggable = true
+end
+
+PlayerTab:AddButton({
+    Name = "Політ транспортом",
+    Callback = function()
+        activatecarFLY()
     end
 })
 

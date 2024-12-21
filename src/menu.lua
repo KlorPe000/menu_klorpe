@@ -222,19 +222,6 @@ local toggleButton = PlayerTab:AddToggle({
     end
 })
 
-UserInputService = game:GetService("UserInputService")
-UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
-    if not gameProcessedEvent and input.KeyCode == Enum.KeyCode[keyBind] then
-        fovEnabled = not fovEnabled
-        toggleButton:Set(fovEnabled)
-        if fovEnabled then
-            game.Workspace.CurrentCamera.FieldOfView = fieldOfView
-        else
-            resetFOV()
-        end
-    end
-end)
-
 game:GetService("UserInputService").JumpRequest:Connect(function()
     if InfiniteJumpEnabled then
         game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass('Humanoid'):ChangeState("Jumping")

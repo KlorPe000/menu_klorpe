@@ -1693,9 +1693,6 @@ local function deactivateHighlight()
     clearAllHighlights()
     log("Highlight был выключен.")
 end
-
--- Тестовые команды (можно убрать)
-activateHighlight()
 -- Через некоторое время можно отключить и включить, чтобы проверить
 task.delay(10, deactivateHighlight)
 task.delay(15, activateHighlight)

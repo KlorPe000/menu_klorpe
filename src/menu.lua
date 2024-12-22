@@ -105,7 +105,7 @@ local Section = PlayerTab:AddSection({
 
 PlayerTab:AddSlider({
     Name = "Швидкість руху",
-    Min = 16,
+    Min = 1,
     Max = 500,
     Default = 16,
     Color = Color3.fromRGB(255, 255, 255),
@@ -150,7 +150,7 @@ local Section = PlayerTab:AddSection({
 
 PlayerTab:AddSlider({
     Name = "Висота стрибка",
-    Min = 7,
+    Min = 1,
     Max = 100,
     Default = 7,
     Color = Color3.fromRGB(255, 255, 255),
@@ -195,7 +195,7 @@ local Section = PlayerTab:AddSection({
 
 PlayerTab:AddSlider({
     Name = "Поле зору",
-    Min = 5,
+    Min = 1,
     Max = 120,
     Default = 70,
     Color = Color3.fromRGB(255, 255, 255),

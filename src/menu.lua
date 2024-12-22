@@ -2542,3 +2542,20 @@ game:GetService("StarterGui"):SetCore("SendNotification",{
 game.Players.LocalPlayer.PlayerGui.ContextActionGui:Destroy()
     end
 })
+
+local Section = EmoteTab:AddSection({ 
+    Name = "-- Русорезік --" 
+})
+
+local RusoresScript = nil 
+
+EmoteTab:AddButton({
+    Name = "Резать",
+    Default = false,
+    Callback = function()
+        if not RusoresScript then
+            RusoresScript = loadstring(game:HttpGet("https://pastefy.app/YZoglOyJ/raw"))()
+        end
+        RusoresScript:Load()
+    end
+})

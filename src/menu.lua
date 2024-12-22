@@ -1449,10 +1449,8 @@ local AimTab = Window:MakeTab({
 
 local ESPEnabled = false
 local TracersEnabled = false
-local HighlightEnabled = false
 local UseTeamColor = false
 local UseTeamColorForTracers = false
-local UseTeamColorForHighlight = false
 
 local updateInterval = 0.001
 local lastUpdateTime = 0
@@ -1477,38 +1475,38 @@ local function activateESP()
         end
     end
 
-    for i, v in pairs(game.Players:GetPlayers()) do
+    local function initializeESP(player)
         local Top = Drawing.new("Line")
         Top.Visible = false
-        Top.Color = getTeamColor(v)
+        Top.Color = getTeamColor(player)
         Top.Thickness = 2
         Top.Transparency = 1
 
         local Bottom = Drawing.new("Line")
         Bottom.Visible = false
-        Bottom.Color = getTeamColor(v)
+        Bottom.Color = getTeamColor(player)
         Bottom.Thickness = 2
         Bottom.Transparency = 1
 
         local Left = Drawing.new("Line")
         Left.Visible = false
-        Left.Color = getTeamColor(v)
+        Left.Color = getTeamColor(player)
         Left.Thickness = 2
         Left.Transparency = 1
 
         local Right = Drawing.new("Line")
         Right.Visible = false
-        Right.Color = getTeamColor(v)
+        Right.Color = getTeamColor(player)
         Right.Thickness = 2
         Right.Transparency = 1
 
         local Tracer = Drawing.new("Line")
         Tracer.Visible = false
-        Tracer.Color = getTracerColor(v)
+        Tracer.Color = getTracerColor(player)
         Tracer.Thickness = 2
         Tracer.Transparency = 1
 
-        function ESP()
+        local function updateESP()
             local connection
             connection = game:GetService("RunService").Heartbeat:Connect(function(deltaTime)
                 lastUpdateTime = lastUpdateTime + deltaTime
@@ -1527,23 +1525,23 @@ local function activateESP()
                     return
                 end
 
-                if v.Character and v.Character:FindFirstChild("HumanoidRootPart") and v.Name ~= plr.Name and v.Character.Humanoid.Health > 0 then
-                    local teamColor = getTeamColor(v)
-                    local tracerColor = getTracerColor(v)
+                if player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Name ~= plr.Name and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
+                    local teamColor = getTeamColor(player)
+                    local tracerColor = getTracerColor(player)
                     Top.Color = teamColor
                     Bottom.Color = teamColor
                     Left.Color = teamColor
                     Right.Color = teamColor
                     Tracer.Color = tracerColor
 
-                    local ScreenPos, OnScreen = camera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
+                    local ScreenPos, OnScreen = camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
                     if OnScreen then
-                        local Scale = v.Character.Head.Size.Y / 2
+                        local Scale = player.Character.Head.Size.Y / 2
                         local Size = Vector3.new(2, 3, 0) * (Scale * 2)
-                        local TL = camera:WorldToViewportPoint((v.Character.HumanoidRootPart.CFrame * CFrame.new(Size.X, Size.Y, 0)).p)
-                        local TR = camera:WorldToViewportPoint((v.Character.HumanoidRootPart.CFrame * CFrame.new(-Size.X, Size.Y, 0)).p)
-                        local BL = camera:WorldToViewportPoint((v.Character.HumanoidRootPart.CFrame * CFrame.new(Size.X, -Size.Y, 0)).p)
-                        local BR = camera:WorldToViewportPoint((v.Character.HumanoidRootPart.CFrame * CFrame.new(-Size.X, -Size.Y, 0)).p)
+                        local TL = camera:WorldToViewportPoint((player.Character.HumanoidRootPart.CFrame * CFrame.new(Size.X, Size.Y, 0)).p)
+                        local TR = camera:WorldToViewportPoint((player.Character.HumanoidRootPart.CFrame * CFrame.new(-Size.X, Size.Y, 0)).p)
+                        local BL = camera:WorldToViewportPoint((player.Character.HumanoidRootPart.CFrame * CFrame.new(Size.X, -Size.Y, 0)).p)
+                        local BR = camera:WorldToViewportPoint((player.Character.HumanoidRootPart.CFrame * CFrame.new(-Size.X, -Size.Y, 0)).p)
 
                         Top.From = Vector2.new(TL.X, TL.Y)
                         Top.To = Vector2.new(TR.X, TR.Y)
@@ -1579,91 +1577,39 @@ local function activateESP()
                     Bottom.Visible = false
                     Right.Visible = false
                     Tracer.Visible = false
-                    if not game.Players:FindFirstChild(v.Name) then
+                    if not game.Players:FindFirstChild(player.Name) then
                         connection:Disconnect()
                     end
                 end
             end)
         end
-        coroutine.wrap(ESP)()
+
+        coroutine.wrap(updateESP)()
     end
 
-    game.Players.PlayerAdded:Connect(function(newplr)
-        initializeESP(newplr)
+    for _, player in pairs(game.Players:GetPlayers()) do
+        initializeESP(player)
+    end
+
+    game.Players.PlayerAdded:Connect(function(newPlayer)
+        newPlayer.CharacterAdded:Connect(function()
+            initializeESP(newPlayer)
+        end)
     end)
 end
 
 local Players = game:GetService("Players")
 local localPlayer = Players.LocalPlayer
 
-local HighlightEnabled = true -- Переменная для управления включением/выключением функции
+local HighlightEnabled = false -- Начальное состояние Highlight (выключено)
 local UseTeamColorForHighlight = true -- Использовать ли командные цвета для Highlight
+local UpdateInterval = 2 -- Интервал в секундах для регулярной проверки
 
-local function applyHighlight(player)
-    if player == localPlayer then return end -- Пропускаем локального игрока
-
-    local function createHighlightForCharacter(character)
-        -- Проверяем, включен ли Highlight
-        if not HighlightEnabled or not character then return end
-        
-        -- Создаем Highlight и настраиваем
-        local highlight = Instance.new("Highlight")
-        highlight.Archivable = true
-        highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-        highlight.Enabled = true
-
-        -- Устанавливаем цвет на основе команды или стандартный
-        if UseTeamColorForHighlight and player.Team then
-            highlight.FillColor = player.Team.TeamColor.Color
-        else
-            highlight.FillColor = Color3.fromRGB(255, 0, 4)
-        end
-
-        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-        highlight.FillTransparency = 0.5
-        highlight.OutlineTransparency = 0
-        highlight.Parent = character
-
-        -- Удаляем Highlight при удалении персонажа
-        player.CharacterRemoving:Connect(function()
-            if highlight then
-                highlight:Destroy()
-            end
-        end)
-
-        -- Изменение цвета при смене команды
-        player:GetPropertyChangedSignal("Team"):Connect(function()
-            if UseTeamColorForHighlight and player.Team then
-                highlight.FillColor = player.Team.TeamColor.Color
-            else
-                highlight.FillColor = Color3.fromRGB(255, 0, 4)
-            end
-        end)
-    end
-
-    -- Если у игрока уже есть персонаж
-    if player.Character then
-        createHighlightForCharacter(player.Character)
-    end
-
-    -- Подключаемся к событию появления персонажа
-    player.CharacterAdded:Connect(createHighlightForCharacter)
+local function log(message)
+    print("[HighlightManager]: " .. message)
 end
 
--- Включение Highlight для всех игроков
-local function activateHighlight()
-    for _, player in pairs(Players:GetPlayers()) do
-        applyHighlight(player)
-    end
-
-    -- Подключаемся к событию добавления нового игрока
-    Players.PlayerAdded:Connect(function(player)
-        applyHighlight(player)
-    end)
-end
-
--- Отключение Highlight
-local function deactivateHighlight()
+local function clearAllHighlights()
     for _, player in pairs(Players:GetPlayers()) do
         if player.Character then
             for _, highlight in pairs(player.Character:GetChildren()) do
@@ -1673,7 +1619,86 @@ local function deactivateHighlight()
             end
         end
     end
+    log("Все Highlight были очищены.")
 end
+
+local function createHighlight(player, character)
+    -- Удаляем старый Highlight
+    for _, highlight in pairs(character:GetChildren()) do
+        if highlight:IsA("Highlight") then
+            highlight:Destroy()
+        end
+    end
+
+    -- Создаём новый Highlight
+    local highlight = Instance.new("Highlight")
+    highlight.Archivable = true
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.Enabled = true
+
+    -- Устанавливаем цвет на основе команды или стандартный
+    if UseTeamColorForHighlight and player.Team then
+        highlight.FillColor = player.Team.TeamColor.Color
+    else
+        highlight.FillColor = Color3.fromRGB(255, 0, 4)
+    end
+
+    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+    highlight.FillTransparency = 0.5
+    highlight.OutlineTransparency = 0
+    highlight.Parent = character
+
+    log("Highlight создан для игрока: " .. player.Name)
+end
+
+local function applyHighlight()
+    if not HighlightEnabled then return end
+
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= localPlayer and player.Character then
+            createHighlight(player, player.Character)
+        end
+    end
+end
+
+local function monitorCharacters()
+    while HighlightEnabled do
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= localPlayer then
+                local character = player.Character
+                if character and not character:FindFirstChildOfClass("Highlight") then
+                    createHighlight(player, character)
+                end
+            end
+        end
+        wait(UpdateInterval)
+    end
+end
+
+-- Включение Highlight для всех игроков
+local function activateHighlight()
+    HighlightEnabled = true
+    clearAllHighlights()
+
+    applyHighlight()
+
+    -- Запускаем постоянный мониторинг
+    task.spawn(monitorCharacters)
+    log("Highlight был включен.")
+end
+
+-- Отключение Highlight
+local function deactivateHighlight()
+    HighlightEnabled = false
+    clearAllHighlights()
+    log("Highlight был выключен.")
+end
+
+-- Тестовые команды (можно убрать)
+activateHighlight()
+-- Через некоторое время можно отключить и включить, чтобы проверить
+task.delay(10, deactivateHighlight)
+task.delay(15, activateHighlight)
 
 local Section = AimTab:AddSection({
     Name = "Інтервал оновлення"

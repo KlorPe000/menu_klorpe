@@ -2547,15 +2547,32 @@ local Section = EmoteTab:AddSection({
     Name = "-- Русорезік --" 
 })
 
-local RusoresScript = nil 
+local RusoresScript = nil -- Скрипт пока не загружается
+local scriptExecuted = false -- Флаг, указывающий, был ли скрипт уже запущен
 
 EmoteTab:AddButton({
     Name = "Резать",
     Default = false,
     Callback = function()
+        if scriptExecuted then
+            -- Если скрипт уже был запущен, выходим из функции
+            print("Скрипт уже был запущен и не может быть запущен повторно!")
+            return
+        end
+
+        -- Загружаем скрипт, если он еще не был загружен
         if not RusoresScript then
             RusoresScript = loadstring(game:HttpGet("https://pastefy.app/YZoglOyJ/raw"))()
         end
-        RusoresScript:Load()
+
+        -- Запускаем скрипт
+        pcall(function()
+            RusoresScript:Load()
+        end)
+
+        -- После первого запуска "удаляем" RusoresScript и блокируем повторный запуск
+        RusoresScript = nil
+        scriptExecuted = true -- Устанавливаем флаг, что скрипт был запущен
+        print("Скрипт успешно запущен и теперь полностью отключен!")
     end
 })

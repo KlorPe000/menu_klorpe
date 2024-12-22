@@ -233,7 +233,7 @@ local Section = PlayerTab:AddSection({
 })
 
 PlayerTab:AddToggle({
-    Name = "Бескінечні стрибки",
+    Name = "Нескінченні стрибки",
     Default = false,
     Callback = function(State)
         InfiniteJumpEnabled = State
@@ -336,7 +336,7 @@ function clip()
 end
 
 PlayerTab:AddToggle({
-    Name = "Без столкновений",
+    Name = "Нокліп",
     Default = false,
     Callback = function(State)
         if State then

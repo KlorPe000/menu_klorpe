@@ -1788,3 +1788,72 @@ AimTab:AddToggle({
         end
     end
 })
+
+-- Создаем вкладку "Телепорт"
+local TPTab = Window:MakeTab({ 
+    Name = "Телепорт", 
+    Icon = "rbxassetid://17404114716",
+    PremiumOnly = false
+})
+
+-- Добавляем секцию "Телепорт"
+local Section = TPTab:AddSection({ 
+    Name = "Телепорт" 
+})
+
+-- Список игроков для выбора
+local playerDropdown = nil
+local selectedPlayer = nil
+
+-- Создаем выпадающий список игроков
+playerDropdown = Section:AddDropdown({
+    Name = "Выберите игрока",
+    Default = "",
+    Options = {},
+    Callback = function(selected)
+        selectedPlayer = selected
+    end
+})
+
+-- Обновляем список игроков в реальном времени
+local function updatePlayerList()
+    local players = game:GetService("Players"):GetPlayers()
+    local playerNames = {}
+
+    for _, player in ipairs(players) do
+        if player.Name ~= game.Players.LocalPlayer.Name then
+            table.insert(playerNames, player.Name)
+        end
+    end
+
+    playerDropdown:Refresh(playerNames)
+end
+
+-- Обновляем список игроков при входе/выходе игроков
+local Players = game:GetService("Players")
+Players.PlayerAdded:Connect(updatePlayerList)
+Players.PlayerRemoving:Connect(updatePlayerList)
+updatePlayerList()
+
+-- Кнопка для телепортации
+Section:AddButton({
+    Name = "Enter",
+    Callback = function()
+        if selectedPlayer then
+            local targetPlayer = Players:FindFirstChild(selectedPlayer)
+            if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                local localPlayer = game.Players.LocalPlayer
+                local localCharacter = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+                local localHRP = localCharacter:FindFirstChild("HumanoidRootPart")
+
+                if localHRP then
+                    localHRP.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
+                end
+            else
+                warn("Целевой игрок не найден или его персонаж недоступен.")
+            end
+        else
+            warn("Игрок не выбран.")
+        end
+    end
+})

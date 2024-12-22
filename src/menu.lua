@@ -2576,3 +2576,13 @@ EmoteTab:AddButton({
         print("Скрипт успешно запущен и теперь полностью отключен!")
     end
 })
+
+local FlingTab = Window:MakeTab({ 
+    Name = "Усяке", 
+    Icon = "rbxassetid://17404114716",
+    PremiumOnly = false
+})
+
+local Section = FlingTab:AddSection({ 
+    Name = "..." 
+})

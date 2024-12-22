@@ -1693,9 +1693,6 @@ local function deactivateHighlight()
     clearAllHighlights()
     log("Highlight был выключен.")
 end
--- Через некоторое время можно отключить и включить, чтобы проверить
-task.delay(10, deactivateHighlight)
-task.delay(15, activateHighlight)
 
 local Section = AimTab:AddSection({
     Name = "Інтервал оновлення"
@@ -1857,3 +1854,40 @@ Section:AddButton({
         end
     end
 })
+
+-- Переменные
+local UIS = game:GetService("UserInputService")
+local Player = game.Players.LocalPlayer
+local Mouse = Player:GetMouse()
+
+local TPEnabled = false -- Переменная для переключателя состояния
+
+-- Функция получения персонажа
+function GetCharacter()
+    return Player.Character
+end
+
+-- Функция телепортации
+function Teleport(pos)
+    local Char = GetCharacter()
+    if Char then
+        Char:MoveTo(pos)
+    end
+end
+
+Section:AddToggle({
+    Name = "TP по клику",
+    Default = false,
+    Callback = function(value)
+        TPEnabled = value
+    end
+})
+
+-- Обработка нажатия клавиш
+UIS.InputBegan:Connect(function(input)
+    if TPEnabled then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 and UIS:IsKeyDown(Enum.KeyCode.LeftControl) then
+            Teleport(Mouse.Hit.p)
+        end
+    end
+end)

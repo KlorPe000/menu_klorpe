@@ -243,51 +243,100 @@ PlayerTab:AddToggle({
 local Noclip = nil
 local Clip = nil
 local originalCollisions = {}
+local cachedParts = {}
+local vehicleCollisions = {}
+local vehicleParts = {}
 
-local function saveCollisions()
+-- Сохранение состояния столкновений для частей игрока
+local function cachePlayerParts()
+    cachedParts = {}
+    originalCollisions = {}
     for _, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
         if v:IsA('BasePart') then
+            table.insert(cachedParts, v)
             originalCollisions[v] = v.CanCollide
         end
     end
 end
 
+-- Сохранение состояния столкновений для транспортного средства
+local function cacheVehicleParts(vehicle)
+    vehicleParts = {}
+    vehicleCollisions = {}
+    for _, v in pairs(vehicle:GetDescendants()) do
+        if v:IsA('BasePart') then
+            table.insert(vehicleParts, v)
+            vehicleCollisions[v] = v.CanCollide
+        end
+    end
+end
+
+-- Проверка на наличие транспортного средства
+local function getVehicle()
+    local character = game.Players.LocalPlayer.Character
+    if character and character:FindFirstChild("Humanoid") then
+        local seat = character.Humanoid.SeatPart
+        if seat and seat:IsA("VehicleSeat") then
+            return seat.Parent
+        end
+    end
+    return nil
+end
+
+-- Включение noclip
 function noclip()
     Clip = false
-    saveCollisions()  
+    cachePlayerParts()
+    
+    local vehicle = getVehicle()
+    if vehicle then
+        cacheVehicleParts(vehicle)
+    end
+
     local function Nocl()
-        if Clip == false and game.Players.LocalPlayer.Character ~= nil then
-            for _, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
-                if v:IsA('BasePart') and v.CanCollide and v.Name ~= floatName then
-                    v.CanCollide = false
+        if not Clip then
+            -- Отключаем столкновения для игрока
+            for _, part in pairs(cachedParts) do
+                if part and part:IsA('BasePart') and part.CanCollide then
+                    part.CanCollide = false
+                end
+            end
+
+            -- Отключаем столкновения для транспортного средства
+            for _, part in pairs(vehicleParts) do
+                if part and part:IsA('BasePart') and part.CanCollide then
+                    part.CanCollide = false
                 end
             end
         end
-        wait(0.21) 
     end
-    Noclip = game:GetService('RunService').Stepped:Connect(Nocl)
+
+    -- Используем Heartbeat для редких обновлений
+    Noclip = game:GetService('RunService').Heartbeat:Connect(Nocl)
 end
 
+-- Выключение noclip
 function clip()
-    if game.Players.LocalPlayer.Character.Humanoid:GetState() == Enum.HumanoidStateType.Physics then
-        repeat
-            wait(0.1)
-        until game.Players.LocalPlayer.Character.Humanoid:GetState() == Enum.HumanoidStateType.Seated or
-               game.Players.LocalPlayer.Character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall == false
-    end
-
     if Noclip then Noclip:Disconnect() end
     Clip = true
-    
+
+    -- Восстанавливаем столкновения для игрока
     for part, collision in pairs(originalCollisions) do
-        if part and part:IsA('BasePart') then
+        if part and part:IsA('BasePart') and part.CanCollide ~= collision then
+            part.CanCollide = collision
+        end
+    end
+
+    -- Восстанавливаем столкновения для транспортного средства
+    for part, collision in pairs(vehicleCollisions) do
+        if part and part:IsA('BasePart') and part.CanCollide ~= collision then
             part.CanCollide = collision
         end
     end
 end
 
 PlayerTab:AddToggle({
-    Name = "Без зіткнень",
+    Name = "Без столкновений",
     Default = false,
     Callback = function(State)
         if State then

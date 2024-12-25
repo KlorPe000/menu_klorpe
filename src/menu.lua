@@ -1034,6 +1034,40 @@ local UniversalSection = UniversalTab:AddSection({
     Name = "Аім"
 })
 
+-- Инициализация глобальной таблицы и её свойств, если они ещё не существуют
+getgenv().ExunysDeveloperAimbot = getgenv().ExunysDeveloperAimbot or {}
+getgenv().ExunysDeveloperAimbot.Settings = getgenv().ExunysDeveloperAimbot.Settings or {
+    TeamCheck = false,
+    AliveCheck = false,
+    WallCheck = false
+}
+
+-- Добавление переключателей в UI
+UniversalSection:AddToggle({
+    Name = "Team Check",
+    Default = getgenv().ExunysDeveloperAimbot.Settings.TeamCheck,
+    Callback = function(Value)
+        getgenv().ExunysDeveloperAimbot.Settings.TeamCheck = Value
+    end
+})
+
+UniversalSection:AddToggle({
+    Name = "Alive Check",
+    Default = getgenv().ExunysDeveloperAimbot.Settings.AliveCheck,
+    Callback = function(Value)
+        getgenv().ExunysDeveloperAimbot.Settings.AliveCheck = Value
+    end
+})
+
+UniversalSection:AddToggle({
+    Name = "Wall Check",
+    Default = getgenv().ExunysDeveloperAimbot.Settings.WallCheck,
+    Callback = function(Value)
+        getgenv().ExunysDeveloperAimbot.Settings.WallCheck = Value
+    end
+})
+
+
 -- Функция инициализации аимбота
 local function InitializeAimbot()
 

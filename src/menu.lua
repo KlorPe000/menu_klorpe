@@ -1044,24 +1044,27 @@ getgenv().ExunysDeveloperAimbot.Settings = getgenv().ExunysDeveloperAimbot.Setti
 
 -- Добавление переключателей в UI
 UniversalSection:AddToggle({
-    Name = "Team Check",
+    Name = "Перевірка команди",
     Default = getgenv().ExunysDeveloperAimbot.Settings.TeamCheck,
+    Default = false,
     Callback = function(Value)
         getgenv().ExunysDeveloperAimbot.Settings.TeamCheck = Value
     end
 })
 
 UniversalSection:AddToggle({
-    Name = "Alive Check",
+    Name = "Перевірка на живого",
     Default = getgenv().ExunysDeveloperAimbot.Settings.AliveCheck,
+    Default = true,
     Callback = function(Value)
         getgenv().ExunysDeveloperAimbot.Settings.AliveCheck = Value
     end
 })
 
 UniversalSection:AddToggle({
-    Name = "Wall Check",
+    Name = "Перевірка стін",
     Default = getgenv().ExunysDeveloperAimbot.Settings.WallCheck,
+    Default = false,
     Callback = function(Value)
         getgenv().ExunysDeveloperAimbot.Settings.WallCheck = Value
     end
@@ -1532,14 +1535,12 @@ UniversalSection:AddDropdown({
     end
 })
 
-
 -- Убедимся, что LockPart в настройках соответствует значению по умолчанию
 getgenv().ExunysDeveloperAimbot.Settings.LockPart = selectedPart
 
--- Добавление переключателя для управления аимботом
 local isAimbotEnabled = false
 UniversalTab:AddToggle({
-    Name = "Включить/Выключить аимбот",
+    Name = "Вкл/Викл Аімбот",
     Default = false,
     Callback = function(state)
         isAimbotEnabled = state
@@ -1554,6 +1555,29 @@ UniversalTab:AddToggle({
                 AimbotScript = nil
             end
         end
+    end
+})
+
+-- Добавление слайдера для радиуса FOV
+UniversalSection:AddSlider({
+    Name = "Радиус FOV",
+    Min = 5,
+    Max = 300,
+    Default = getgenv().ExunysDeveloperAimbot.FOVSettings.Radius,
+    Increment = 1,
+    Callback = function(Value)
+        getgenv().ExunysDeveloperAimbot.FOVSettings.Radius = Value
+    end
+})
+
+-- Добавление переключателя для видимости FOV
+UniversalSection:AddToggle({
+    Name = "Видимость FOV",
+    Default = getgenv().ExunysDeveloperAimbot.FOVSettings.Visible,
+    Callback = function(Value)
+        getgenv().ExunysDeveloperAimbot.FOVSettings.Visible = Value
+        getgenv().ExunysDeveloperAimbot.FOVCircle.Visible = Value
+        getgenv().ExunysDeveloperAimbot.FOVCircleOutline.Visible = Value
     end
 })
 
@@ -1721,10 +1745,6 @@ local HighlightEnabled = false -- Начальное состояние Highligh
 local UseTeamColorForHighlight = true -- Использовать ли командные цвета для Highlight
 local UpdateInterval = 2 -- Интервал в секундах для регулярной проверки
 
-local function log(message)
-    print("[HighlightManager]: " .. message)
-end
-
 local function clearAllHighlights()
     for _, player in pairs(Players:GetPlayers()) do
         if player.Character then
@@ -1735,7 +1755,6 @@ local function clearAllHighlights()
             end
         end
     end
-    log("Все Highlight были очищены.")
 end
 
 local function createHighlight(player, character)
@@ -1764,7 +1783,6 @@ local function createHighlight(player, character)
     highlight.OutlineTransparency = 0
     highlight.Parent = character
 
-    log("Highlight создан для игрока: " .. player.Name)
 end
 
 local function applyHighlight()
@@ -1800,14 +1818,12 @@ local function activateHighlight()
 
     -- Запускаем постоянный мониторинг
     task.spawn(monitorCharacters)
-    log("Highlight был включен.")
 end
 
 -- Отключение Highlight
 local function deactivateHighlight()
     HighlightEnabled = false
     clearAllHighlights()
-    log("Highlight был выключен.")
 end
 
 local Section = AimTab:AddSection({

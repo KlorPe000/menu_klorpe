@@ -1023,6 +1023,7 @@ PlayerTab:AddButton({
     end
 })
 
+-- Создание вкладки в пользовательском интерфейсе
 local UniversalTab = Window:MakeTab({
     Name = "Аім", 
     Icon = "rbxassetid://17404114716", 
@@ -1033,7 +1034,8 @@ local UniversalSection = UniversalTab:AddSection({
     Name = "Аім"
 })
 
-local AimbotScript = loadstring([[
+-- Функция инициализации аимбота
+local function InitializeAimbot()
 
 local game, workspace = game, workspace
 local getrawmetatable, getmetatable, setmetatable, pcall, getgenv, next, tick, select = getrawmetatable, getmetatable, setmetatable, pcall, getgenv, next, tick, select
@@ -1433,12 +1435,30 @@ Environment.Load = Load -- ExunysDeveloperAimbot.Load()
 setmetatable(Environment, {__call = Load})
 
 return Environment
-]])()
 
-UniversalTab:AddButton({
-    Name = "Увімкнути аімбот",
-    Callback = function()
-        AimbotScript:Load()
+end
+
+-- Инициализация аимбота
+local AimbotScript
+
+-- Добавление переключателя для управления аимботом
+local isAimbotEnabled = false
+UniversalTab:AddToggle({
+    Name = "Включить/Выключить аимбот",
+    Default = false,
+    Callback = function(state)
+        isAimbotEnabled = state
+        if isAimbotEnabled then
+            if not AimbotScript then
+                AimbotScript = InitializeAimbot()
+            end
+            AimbotScript:Load()
+        else
+            if AimbotScript then
+                AimbotScript:Exit()
+                AimbotScript = nil
+            end
+        end
     end
 })
 

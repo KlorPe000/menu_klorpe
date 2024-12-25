@@ -1247,52 +1247,58 @@ local CancelLock = function()
 	end
 end
 
-local GetClosestPlayer = function()
-	local Settings = Environment.Settings
-	local LockPart = Settings.LockPart
+-- Проверяем части тела в модели персонажа
+local function GetClosestPlayer()
+    local Settings = Environment.Settings
+    local LockPart = Settings.LockPart
 
-	if not Environment.Locked then
-		RequiredDistance = Environment.FOVSettings.Enabled and Environment.FOVSettings.Radius or 2000
+    if not Environment.Locked then
+        RequiredDistance = Environment.FOVSettings.Enabled and Environment.FOVSettings.Radius or 2000
 
-		for _, Value in next, GetPlayers(Players) do
-			local Character = __index(Value, "Character")
-			local Humanoid = Character and FindFirstChildOfClass(Character, "Humanoid")
+        for _, Player in next, GetPlayers(Players) do
+            local Character = __index(Player, "Character")
+            local Humanoid = Character and FindFirstChildOfClass(Character, "Humanoid")
 
-			if Value ~= LocalPlayer and not tablefind(Environment.Blacklisted, __index(Value, "Name")) and Character and FindFirstChild(Character, LockPart) and Humanoid then
-				local PartPosition, TeamCheckOption = __index(Character[LockPart], "Position"), Environment.DeveloperSettings.TeamCheckOption
+            if Player ~= LocalPlayer and not tablefind(Environment.Blacklisted, __index(Player, "Name")) and Character and Humanoid then
+                local Part = FindFirstChild(Character, LockPart)
+                if not Part then
+                    warn("Часть тела " .. LockPart .. " не найдена у персонажа " .. Player.Name)
+                    continue
+                end
 
-				if Settings.TeamCheck and __index(Value, TeamCheckOption) == __index(LocalPlayer, TeamCheckOption) then
-					continue
-				end
+                local PartPosition = __index(Part, "Position")
+                if Settings.TeamCheck and __index(Player, Environment.DeveloperSettings.TeamCheckOption) == __index(LocalPlayer, Environment.DeveloperSettings.TeamCheckOption) then
+                    continue
+                end
 
-				if Settings.AliveCheck and __index(Humanoid, "Health") <= 0 then
-					continue
-				end
+                if Settings.AliveCheck and __index(Humanoid, "Health") <= 0 then
+                    continue
+                end
 
-				if Settings.WallCheck then
-					local BlacklistTable = GetDescendants(__index(LocalPlayer, "Character"))
+                if Settings.WallCheck then
+                    local BlacklistTable = GetDescendants(__index(LocalPlayer, "Character"))
 
-					for _, Value in next, GetDescendants(Character) do
-						BlacklistTable[#BlacklistTable + 1] = Value
-					end
+                    for _, Value in next, GetDescendants(Character) do
+                        BlacklistTable[#BlacklistTable + 1] = Value
+                    end
 
-					if #GetPartsObscuringTarget(Camera, {PartPosition}, BlacklistTable) > 0 then
-						continue
-					end
-				end
+                    if #GetPartsObscuringTarget(Camera, {PartPosition}, BlacklistTable) > 0 then
+                        continue
+                    end
+                end
 
-				local Vector, OnScreen, Distance = WorldToViewportPoint(Camera, PartPosition)
-				Vector = ConvertVector(Vector)
-				Distance = (GetMouseLocation(UserInputService) - Vector).Magnitude
+                local Vector, OnScreen, Distance = WorldToViewportPoint(Camera, PartPosition)
+                Vector = ConvertVector(Vector)
+                Distance = (GetMouseLocation(UserInputService) - Vector).Magnitude
 
-				if Distance < RequiredDistance and OnScreen then
-					RequiredDistance, Environment.Locked = Distance, Value
-				end
-			end
-		end
-	elseif (GetMouseLocation(UserInputService) - ConvertVector(WorldToViewportPoint(Camera, __index(__index(__index(Environment.Locked, "Character"), LockPart), "Position")))).Magnitude > RequiredDistance then
-		CancelLock()
-	end
+                if Distance < RequiredDistance and OnScreen then
+                    RequiredDistance, Environment.Locked = Distance, Player
+                end
+            end
+        end
+    elseif (GetMouseLocation(UserInputService) - ConvertVector(WorldToViewportPoint(Camera, __index(__index(__index(Environment.Locked, "Character"), LockPart), "Position")))).Magnitude > RequiredDistance then
+        CancelLock()
+    end
 end
 
 local Load = function()
@@ -1474,6 +1480,61 @@ end
 
 -- Инициализация аимбота
 local AimbotScript
+
+local bodyParts = {
+    "Head",
+    "HumanoidRootPart",
+    "LeftHand",
+    "RightHand",
+    "LeftLowerArm",
+    "RightLowerArm",
+    "LeftUpperArm",
+    "RightUpperArm",
+    "LeftLowerLeg",
+    "RightLowerLeg",
+    "LowerTorso"
+}
+
+local translations = {
+    Head = "Голова",
+    HumanoidRootPart = "Торс",
+    LeftHand = "Ліва долоня",
+    RightHand = "Права долоня",
+    LeftLowerArm = "Лівий лікоть",
+    RightLowerArm = "Правий лікоть",
+    LeftUpperArm = "Ліве плече",
+    RightUpperArm = "Праве плече",
+    LeftLowerLeg = "Ліва нога",
+    RightLowerLeg = "Права нога",
+    LowerTorso = "Член"
+}
+
+-- Генерация списка с переводами для отображения
+local displayOptions = {}
+for _, part in ipairs(bodyParts) do
+    table.insert(displayOptions, translations[part])
+end
+
+local selectedPart = "Head" -- Значение по умолчанию
+UniversalSection:AddDropdown({
+    Name = "Часть тела для локона",
+    Default = translations[selectedPart],
+    Options = displayOptions,
+    Callback = function(Value)
+        -- Найти оригинальное название по переводу
+        for original, translation in pairs(translations) do
+            if translation == Value then
+                selectedPart = original
+                break
+            end
+        end
+        getgenv().ExunysDeveloperAimbot.Settings.LockPart = selectedPart
+    end
+})
+
+
+-- Убедимся, что LockPart в настройках соответствует значению по умолчанию
+getgenv().ExunysDeveloperAimbot.Settings.LockPart = selectedPart
 
 -- Добавление переключателя для управления аимботом
 local isAimbotEnabled = false

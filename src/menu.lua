@@ -1998,7 +1998,7 @@ updatePlayerList()
 
 -- Кнопка для телепортации
 Section:AddButton({
-    Name = "Застосувати",
+    Name = "Телепортувати",
     Callback = function()
         if selectedPlayer then
             local targetPlayer = Players:FindFirstChild(selectedPlayer)

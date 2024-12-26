@@ -2040,7 +2040,7 @@ function Teleport(pos)
 end
 
 Section:AddToggle({
-    Name = "TP на кліку",
+    Name = "TP на кліку (Ctrl + ЛКМ)",
     Default = false,
     Callback = function(value)
         TPEnabled = value

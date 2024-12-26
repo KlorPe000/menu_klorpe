@@ -1264,10 +1264,6 @@ local function GetClosestPlayer()
 
             if Player ~= LocalPlayer and not tablefind(Environment.Blacklisted, __index(Player, "Name")) and Character and Humanoid then
                 local Part = FindFirstChild(Character, LockPart)
-                if not Part then
-                    warn("Часть тела " .. LockPart .. " не найдена у персонажа " .. Player.Name)
-                    continue
-                end
 
                 local PartPosition = __index(Part, "Position")
                 if Settings.TeamCheck and __index(Player, Environment.DeveloperSettings.TeamCheckOption) == __index(LocalPlayer, Environment.DeveloperSettings.TeamCheckOption) then
@@ -1520,7 +1516,7 @@ end
 
 local selectedPart = "Head" -- Значение по умолчанию
 UniversalSection:AddDropdown({
-    Name = "Часть тела для локона",
+    Name = "Виберіть частину тіла",
     Default = translations[selectedPart],
     Options = displayOptions,
     Callback = function(Value)
@@ -1585,9 +1581,9 @@ end
 
 -- Добавление слайдера для изменения радиуса FOV
 UniversalSection:AddSlider({
-    Name = "Радиус FOV",
-    Min = 5,
-    Max = 300,
+    Name = "Радіус FOV",
+    Min = 50,
+    Max = 500,
     Default = getgenv().ExunysDeveloperAimbot.FOVSettings.Radius,
     Increment = 1,
     Callback = function(Value)
@@ -1597,7 +1593,7 @@ UniversalSection:AddSlider({
 
 -- Добавление переключателя для видимости FOV
 UniversalSection:AddToggle({
-    Name = "Видимость FOV",
+    Name = "Видимість FOV",
     Default = getgenv().ExunysDeveloperAimbot.FOVSettings.Visible,
     Callback = function(Value)
         getgenv().ExunysDeveloperAimbot.FOVSettings.Visible = Value
@@ -1972,7 +1968,7 @@ local selectedPlayer = nil
 
 -- Создаем выпадающий список игроков
 playerDropdown = Section:AddDropdown({
-    Name = "Выберите игрока",
+    Name = "Виберіте гравця",
     Default = "",
     Options = {},
     Callback = function(selected)
@@ -2002,7 +1998,7 @@ updatePlayerList()
 
 -- Кнопка для телепортации
 Section:AddButton({
-    Name = "Enter",
+    Name = "Застосувати",
     Callback = function()
         if selectedPlayer then
             local targetPlayer = Players:FindFirstChild(selectedPlayer)
@@ -2015,10 +2011,10 @@ Section:AddButton({
                     localHRP.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
                 end
             else
-                warn("Целевой игрок не найден или его персонаж недоступен.")
+                warn("Цього гравця не знайдено або його персонаж недоступний.")
             end
         else
-            warn("Игрок не выбран.")
+            warn("Гравеця не вибрано.")
         end
     end
 })
@@ -2044,7 +2040,7 @@ function Teleport(pos)
 end
 
 Section:AddToggle({
-    Name = "TP по клику",
+    Name = "TP на кліку",
     Default = false,
     Callback = function(value)
         TPEnabled = value
@@ -2071,7 +2067,7 @@ local Section = EmoteTab:AddSection({
 })
 
 Section:AddButton({
-    Name = "Включить скрипт с емоциями",
+    Name = "Включити скрипт із емоціями",
     Default = false,
     Callback = function()
         game:GetService("StarterGui"):SetCore("SendNotification",{
@@ -2723,7 +2719,7 @@ EmoteTab:AddButton({
     Callback = function()
         if scriptExecuted then
             -- Если скрипт уже был запущен, выходим из функции
-            print("Скрипт уже был запущен и не может быть запущен повторно!")
+            print("Скрипт уже запущено і не може бути запущено повторно!")
             return
         end
 
@@ -2740,7 +2736,7 @@ EmoteTab:AddButton({
         -- После первого запуска "удаляем" RusoresScript и блокируем повторный запуск
         RusoresScript = nil
         scriptExecuted = true -- Устанавливаем флаг, что скрипт был запущен
-        print("Скрипт успешно запущен и теперь полностью отключен!")
+        print("Скрипт успішно запущено і тепер повністю вимкнено!")
     end
 })
 
@@ -2791,17 +2787,17 @@ updatePlayerList()
 
 -- Создаем кнопку для выполнения флинга
 FlingTab:AddButton({
-    Name = "Флинг",
+    Name = "Флінг",
     Callback = function()
         if selectedPlayer then
             local playerToFling = game:GetService("Players"):FindFirstChild(selectedPlayer)
             if playerToFling then
                 miniFling(playerToFling)
             else
-                warn("Игрок не найден")
+                warn("Гравець не знайдено")
             end
         else
-            warn("Выберите игрока для флинга")
+            warn("Виберіть гравця для флінгу")
         end
     end
 })

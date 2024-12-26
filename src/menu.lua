@@ -1950,87 +1950,6 @@ AimTab:AddToggle({
     end
 })
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local LP = Players.LocalPlayer
-local roles
-local highlightEnabled = false -- Изначально выключено
-
--- > Functions < --
-
-function CreateHighlight() -- Создаем Highlight только при включенном состоянии
-    if not highlightEnabled then return end
-    for i, v in pairs(Players:GetChildren()) do
-        if v ~= LP and v.Character and not v.Character:FindFirstChild("Highlight") then
-            Instance.new("Highlight", v.Character)
-        end
-    end
-end
-
-function UpdateHighlights() -- Обновляем цвета Highlight
-    for _, v in pairs(Players:GetChildren()) do
-        if v ~= LP and v.Character and v.Character:FindFirstChild("Highlight") then
-            local Highlight = v.Character:FindFirstChild("Highlight")
-            if v.Name == Sheriff and IsAlive(v) then
-                Highlight.FillColor = Color3.fromRGB(0, 0, 225) -- Синий для Шерифа
-            elseif v.Name == Murder and IsAlive(v) then
-                Highlight.FillColor = Color3.fromRGB(225, 0, 0) -- Красный для Убийцы
-            elseif v.Name == Hero and IsAlive(v) and not IsAlive(game.Players[Sheriff]) then
-                Highlight.FillColor = Color3.fromRGB(255, 250, 0) -- Желтый для Героя
-            else
-                Highlight.FillColor = Color3.fromRGB(0, 225, 0) -- Зеленый для остальных
-            end
-        end
-    end
-end
-
-function IsAlive(Player) -- Проверка, жив ли игрок
-    for i, v in pairs(roles) do
-        if Player.Name == i then
-            return not v.Killed and not v.Dead
-        end
-    end
-    return false
-end
-
--- > Loops < --
-
-RunService.RenderStepped:Connect(function()
-    roles = ReplicatedStorage:FindFirstChild("GetPlayerData", true):InvokeServer()
-    for i, v in pairs(roles) do
-        if v.Role == "Murderer" then
-            Murder = i
-        elseif v.Role == 'Sheriff' then
-            Sheriff = i
-        elseif v.Role == 'Hero' then
-            Hero = i
-        end
-    end
-    if highlightEnabled then
-        CreateHighlight()
-        UpdateHighlights()
-    end
-end)
-
--- > Переключатель < --
-
-AimTab:AddToggle({
-    Name = "Виділення Murder Mystery 2",
-    Default = false, -- Изначально выключено
-    Callback = function(state)
-        highlightEnabled = state -- Обновляем состояние Highlight
-        if not highlightEnabled then
-            -- Отключаем Highlight у всех игроков, если оно выключено
-            for _, v in pairs(Players:GetChildren()) do
-                if v.Character and v.Character:FindFirstChild("Highlight") then
-                    v.Character.Highlight:Destroy() -- Удаляем Highlight
-                end
-            end
-        end
-    end
-})
-
 -- Создаем вкладку "Телепорт"
 local TPTab = Window:MakeTab({ 
     Name = "Телепорт", 
@@ -3027,6 +2946,172 @@ function miniFling(playerToFling)
     g(c[1])
 end
 
+
+local MurderTab = Window:MakeTab({ 
+    Name = "Murder Mystery", 
+    Icon = "rbxassetid://17404114716",
+    PremiumOnly = false
+})
+
+local Section = MurderTab:AddSection({ 
+    Name = "Вх" 
+})
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LP = Players.LocalPlayer
+local roles
+local highlightEnabled = false -- Изначально выключено
+
+-- > Functions < --
+
+function CreateHighlight() -- Создаем Highlight только при включенном состоянии
+    if not highlightEnabled then return end
+    for i, v in pairs(Players:GetChildren()) do
+        if v ~= LP and v.Character and not v.Character:FindFirstChild("Highlight") then
+            Instance.new("Highlight", v.Character)
+        end
+    end
+end
+
+function UpdateHighlights() -- Обновляем цвета Highlight
+    for _, v in pairs(Players:GetChildren()) do
+        if v ~= LP and v.Character and v.Character:FindFirstChild("Highlight") then
+            local Highlight = v.Character:FindFirstChild("Highlight")
+            if v.Name == Sheriff and IsAlive(v) then
+                Highlight.FillColor = Color3.fromRGB(0, 0, 225) -- Синий для Шерифа
+            elseif v.Name == Murder and IsAlive(v) then
+                Highlight.FillColor = Color3.fromRGB(225, 0, 0) -- Красный для Убийцы
+            elseif v.Name == Hero and IsAlive(v) and not IsAlive(game.Players[Sheriff]) then
+                Highlight.FillColor = Color3.fromRGB(0, 0, 225) -- Желтый для Героя
+            else
+                Highlight.FillColor = Color3.fromRGB(0, 225, 0) -- Зеленый для остальных
+            end
+        end
+    end
+end
+
+function IsAlive(Player) -- Проверка, жив ли игрок
+    for i, v in pairs(roles) do
+        if Player.Name == i then
+            return not v.Killed and not v.Dead
+        end
+    end
+    return false
+end
+
+-- > Loops < --
+
+RunService.RenderStepped:Connect(function()
+    roles = ReplicatedStorage:FindFirstChild("GetPlayerData", true):InvokeServer()
+    for i, v in pairs(roles) do
+        if v.Role == "Murderer" then
+            Murder = i
+        elseif v.Role == 'Sheriff' then
+            Sheriff = i
+        elseif v.Role == 'Hero' then
+            Hero = i
+        end
+    end
+    if highlightEnabled then
+        CreateHighlight()
+        UpdateHighlights()
+    end
+end)
+
+-- > Переключатель < --
+
+MurderTab:AddToggle({
+    Name = "Виділення гравців",
+    Default = false, -- Изначально выключено
+    Callback = function(state)
+        highlightEnabled = state -- Обновляем состояние Highlight
+        if not highlightEnabled then
+            -- Отключаем Highlight у всех игроков, если оно выключено
+            for _, v in pairs(Players:GetChildren()) do
+                if v.Character and v.Character:FindFirstChild("Highlight") then
+                    v.Character.Highlight:Destroy() -- Удаляем Highlight
+                end
+            end
+        end
+    end
+})
+
+local espEnabled = false
+local checkingThread = nil
+
+-- Функция для включения/выключения ESP подсветки для оружия
+local function toggleESP(enabled)
+    local normal = workspace:FindFirstChild("Normal")  -- Здесь ищем нормальную зону, где оружие будет
+    if normal then
+        for _, gunDrop in ipairs(normal:GetChildren()) do
+            if gunDrop.Name == "GunDrop" then  -- Проверяем, является ли объект оружием
+                local highlight = gunDrop:FindFirstChild("Highlight")
+                if enabled and not highlight then
+                    -- Если ESP включен и Highlight нет, создаем его
+                    local highlight = Instance.new("Highlight", gunDrop)
+                    highlight.FillColor = Color3.fromRGB(7, 0, 255)  -- Цвет подсветки
+                    highlight.OutlineTransparency = 0.75  -- Прозрачность контура
+                    highlight.Name = "Highlight"  -- Присваиваем имя, чтобы не создавать несколько подсветок
+                elseif not enabled and highlight then
+                    -- Если ESP выключен и Highlight существует, удаляем его
+                    highlight:Destroy()
+                end
+            end
+        end
+    end
+end
+
+-- Функция для постоянной проверки появления новых объектов GunDrop
+local function checkForNewGunDrops()
+    while espEnabled do
+        local normal = workspace:FindFirstChild("Normal")
+        if normal then
+            for _, gunDrop in ipairs(normal:GetChildren()) do
+                if gunDrop.Name == "GunDrop" and not gunDrop:FindFirstChild("Highlight") then
+                    -- Если новый GunDrop появился и у него нет подсветки, добавляем ее
+                    local highlight = Instance.new("Highlight", gunDrop)
+                    highlight.FillColor = Color3.fromRGB(7, 0, 255)
+                    highlight.OutlineTransparency = 0.75
+                    highlight.Name = "Highlight"
+                end
+            end
+        end
+        task.wait(0.5)  -- Пауза перед следующим циклом проверки
+    end
+end
+
+-- Слушаем событие появления новых объектов в игре
+workspace.ChildAdded:Connect(function(child)
+    if child.Name == "Normal" and espEnabled then
+        -- Когда появляется зона "Normal" с оружием, включаем ESP
+        toggleESP(true)
+    end
+end)
+
+-- Добавляем переключатель для включения и выключения ESP
+MurderTab:AddToggle({
+    Name = "ESP gun", 
+    Default = false,  -- Изначально выключено
+    Callback = function(state)
+        espEnabled = state
+        toggleESP(espEnabled)  -- Включаем/выключаем ESP
+        if espEnabled then
+            -- Если ESP включен, запускаем проверку появления новых объектов
+            if checkingThread then
+                task.cancel(checkingThread)
+            end
+            checkingThread = task.spawn(checkForNewGunDrops)
+        else
+            -- Если ESP выключен, отменяем проверку
+            if checkingThread then
+                task.cancel(checkingThread)
+                checkingThread = nil
+            end
+        end
+    end
+})
 
 local NonameTab = Window:MakeTab({ 
     Name = "Усяке", 

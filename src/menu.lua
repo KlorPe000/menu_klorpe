@@ -1042,6 +1042,15 @@ getgenv().ExunysDeveloperAimbot.Settings = getgenv().ExunysDeveloperAimbot.Setti
     WallCheck = false
 }
 
+UniversalSection:AddToggle({
+    Name = "Перевірка на живого",
+    Default = getgenv().ExunysDeveloperAimbot.Settings.AliveCheck,
+    Default = true,
+    Callback = function(Value)
+        getgenv().ExunysDeveloperAimbot.Settings.AliveCheck = Value
+    end
+})
+
 -- Добавление переключателей в UI
 UniversalSection:AddToggle({
     Name = "Перевірка команди",
@@ -1049,15 +1058,6 @@ UniversalSection:AddToggle({
     Default = false,
     Callback = function(Value)
         getgenv().ExunysDeveloperAimbot.Settings.TeamCheck = Value
-    end
-})
-
-UniversalSection:AddToggle({
-    Name = "Перевірка на живого",
-    Default = getgenv().ExunysDeveloperAimbot.Settings.AliveCheck,
-    Default = true,
-    Callback = function(Value)
-        getgenv().ExunysDeveloperAimbot.Settings.AliveCheck = Value
     end
 })
 
@@ -1558,7 +1558,32 @@ UniversalTab:AddToggle({
     end
 })
 
--- Добавление слайдера для радиуса FOV
+-- Проверка и инициализация настроек aimbot
+if not getgenv().ExunysDeveloperAimbot then
+    getgenv().ExunysDeveloperAimbot = {}
+end
+
+if not getgenv().ExunysDeveloperAimbot.FOVSettings then
+    getgenv().ExunysDeveloperAimbot.FOVSettings = {
+        Radius = 180,  -- Установите значение по умолчанию
+        Visible = true
+    }
+end
+
+-- Инициализация FOVCircle и FOVCircleOutline, если они не существуют
+if not getgenv().ExunysDeveloperAimbot.FOVCircle then
+    getgenv().ExunysDeveloperAimbot.FOVCircle = {
+        Visible = getgenv().ExunysDeveloperAimbot.FOVSettings.Visible
+    }
+end
+
+if not getgenv().ExunysDeveloperAimbot.FOVCircleOutline then
+    getgenv().ExunysDeveloperAimbot.FOVCircleOutline = {
+        Visible = getgenv().ExunysDeveloperAimbot.FOVSettings.Visible
+    }
+end
+
+-- Добавление слайдера для изменения радиуса FOV
 UniversalSection:AddSlider({
     Name = "Радиус FOV",
     Min = 5,
@@ -1576,8 +1601,19 @@ UniversalSection:AddToggle({
     Default = getgenv().ExunysDeveloperAimbot.FOVSettings.Visible,
     Callback = function(Value)
         getgenv().ExunysDeveloperAimbot.FOVSettings.Visible = Value
-        getgenv().ExunysDeveloperAimbot.FOVCircle.Visible = Value
-        getgenv().ExunysDeveloperAimbot.FOVCircleOutline.Visible = Value
+
+        -- Проверяем перед изменением свойства
+        if getgenv().ExunysDeveloperAimbot.FOVCircle then
+            getgenv().ExunysDeveloperAimbot.FOVCircle.Visible = Value
+        else
+            warn("FOVCircle is not initialized!")
+        end
+
+        if getgenv().ExunysDeveloperAimbot.FOVCircleOutline then
+            getgenv().ExunysDeveloperAimbot.FOVCircleOutline.Visible = Value
+        else
+            warn("FOVCircleOutline is not initialized!")
+        end
     end
 })
 

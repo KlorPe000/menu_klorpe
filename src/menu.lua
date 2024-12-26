@@ -1950,6 +1950,87 @@ AimTab:AddToggle({
     end
 })
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LP = Players.LocalPlayer
+local roles
+local highlightEnabled = false -- Изначально выключено
+
+-- > Functions < --
+
+function CreateHighlight() -- Создаем Highlight только при включенном состоянии
+    if not highlightEnabled then return end
+    for i, v in pairs(Players:GetChildren()) do
+        if v ~= LP and v.Character and not v.Character:FindFirstChild("Highlight") then
+            Instance.new("Highlight", v.Character)
+        end
+    end
+end
+
+function UpdateHighlights() -- Обновляем цвета Highlight
+    for _, v in pairs(Players:GetChildren()) do
+        if v ~= LP and v.Character and v.Character:FindFirstChild("Highlight") then
+            local Highlight = v.Character:FindFirstChild("Highlight")
+            if v.Name == Sheriff and IsAlive(v) then
+                Highlight.FillColor = Color3.fromRGB(0, 0, 225) -- Синий для Шерифа
+            elseif v.Name == Murder and IsAlive(v) then
+                Highlight.FillColor = Color3.fromRGB(225, 0, 0) -- Красный для Убийцы
+            elseif v.Name == Hero and IsAlive(v) and not IsAlive(game.Players[Sheriff]) then
+                Highlight.FillColor = Color3.fromRGB(255, 250, 0) -- Желтый для Героя
+            else
+                Highlight.FillColor = Color3.fromRGB(0, 225, 0) -- Зеленый для остальных
+            end
+        end
+    end
+end
+
+function IsAlive(Player) -- Проверка, жив ли игрок
+    for i, v in pairs(roles) do
+        if Player.Name == i then
+            return not v.Killed and not v.Dead
+        end
+    end
+    return false
+end
+
+-- > Loops < --
+
+RunService.RenderStepped:Connect(function()
+    roles = ReplicatedStorage:FindFirstChild("GetPlayerData", true):InvokeServer()
+    for i, v in pairs(roles) do
+        if v.Role == "Murderer" then
+            Murder = i
+        elseif v.Role == 'Sheriff' then
+            Sheriff = i
+        elseif v.Role == 'Hero' then
+            Hero = i
+        end
+    end
+    if highlightEnabled then
+        CreateHighlight()
+        UpdateHighlights()
+    end
+end)
+
+-- > Переключатель < --
+
+AimTab:AddToggle({
+    Name = "Виділення Murder Mystery 2",
+    Default = false, -- Изначально выключено
+    Callback = function(state)
+        highlightEnabled = state -- Обновляем состояние Highlight
+        if not highlightEnabled then
+            -- Отключаем Highlight у всех игроков, если оно выключено
+            for _, v in pairs(Players:GetChildren()) do
+                if v.Character and v.Character:FindFirstChild("Highlight") then
+                    v.Character.Highlight:Destroy() -- Удаляем Highlight
+                end
+            end
+        end
+    end
+})
+
 -- Создаем вкладку "Телепорт"
 local TPTab = Window:MakeTab({ 
     Name = "Телепорт", 

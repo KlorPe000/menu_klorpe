@@ -3113,6 +3113,151 @@ MurderTab:AddToggle({
     end
 })
 
+-- Fake Death Function
+local fakeDeathButton = Section:AddButton({
+    Name = "Fake Death",
+    Callback = function()
+        local humanoid = game:GetService("Players").LocalPlayer.Character.Humanoid
+        if not humanoid.Sit then
+            humanoid.Sit = true
+            wait()
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.Angles(math.rad(-90), 0, 0)
+        end
+    end
+})
+
+-- Teleport To Map Function
+local teleportToMapButton = Section:AddButton({
+    Name = "Teleport To Map",
+    Callback = function()
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("BasePart") and (v.Name == "Spawn" or v.Name == "PlayerSpawn") and v.Parent.Parent.Name ~= "Lobby" then
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.CFrame * CFrame.new(0, 3, 0)
+            end
+        end
+    end
+})
+
+-- Teleport To Lobby Function
+local teleportToLobbyButton = Section:AddButton({
+    Name = "Teleport To Lobby",
+    Callback = function()
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("BasePart") and v.Parent.Name == "Spawns" and v.Parent.Parent.Name == "Lobby" then
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.CFrame * CFrame.new(0, 3, 0)
+            end
+        end
+    end
+})
+
+-- ESP функционал
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local roles
+
+function IsAlive(Player)
+    for i, v in pairs(roles) do
+        if Player.Name == i then
+            if not v.Killed and not v.Dead then
+                return true
+            else
+                return false
+            end
+        end
+    end
+end
+
+Murder = nil
+Sheriff = nil
+Hero = nil
+
+game:GetService('RunService').RenderStepped:connect(function()
+    roles = ReplicatedStorage:FindFirstChild("GetPlayerData", true):InvokeServer()
+    for i, v in pairs(roles) do
+        if v.Role == "Murderer" then
+            Murder = i
+        elseif v.Role == "Sheriff" then
+            Sheriff = i
+        elseif v.Role == "Hero" then
+            Hero = i
+        end
+    end
+end)
+
+GunDrop = nil
+workspace.DescendantAdded:Connect(function(part)
+    if part.Name == "GunDrop" then
+        GunDrop = part
+    end
+end)
+
+workspace.DescendantRemoving:Connect(function(part)
+    if part.Name == "GunDrop" then
+        GunDrop = nil
+    end
+end)
+
+function MakeHighlight()
+    for _, v in pairs(game.Players:GetChildren()) do
+        if v ~= game.Players.LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+            local highlight = v.Character:FindFirstChild("Highlight")
+            if not highlight then
+                highlight = Instance.new("Highlight")
+                highlight.Name = "Highlight"
+                highlight.Parent = v.Character
+            end
+
+            local color
+            if v.Name == Sheriff and IsAlive(v) then
+                color = Color3.new(0, 0, 250)
+            elseif v.Name == Murder and IsAlive(v) then
+                color = Color3.new(8, 0, 0)
+            elseif v.Name == Hero and IsAlive(v) and not IsAlive(game.Players[Sheriff]) then
+                color = Color3.new(10, 15, 0)
+            else
+                color = Color3.new(0, 350, 0)
+            end
+
+            if highlight.FillColor ~= color then
+                highlight.FillColor = color
+            end
+        end
+    end
+end
+
+function ClearHighlight()
+    for _, v in pairs(game.Players:GetChildren()) do
+        if v.Character then
+            local highlight = v.Character:FindFirstChild("Highlight")
+            if highlight then
+                highlight:Destroy()
+            end
+        end
+    end
+end
+
+local Esp = false
+local EspOperator = false
+
+game:GetService('RunService').RenderStepped:connect(function()
+    if Esp == true and EspOperator == false then
+        EspOperator = true
+        pcall(MakeHighlight)
+        wait(3)
+        EspOperator = false
+    end
+end)
+
+MurderTab:AddToggle({
+    Name = "Виділення (2)",
+    Default = false,
+    Callback = function(State)
+        Esp = State
+        if not Esp then
+            ClearHighlight()
+        end
+    end
+})
+
 local NonameTab = Window:MakeTab({ 
     Name = "Усяке", 
     Icon = "rbxassetid://17404114716",

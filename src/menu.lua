@@ -2953,8 +2953,9 @@ local MurderTab = Window:MakeTab({
     PremiumOnly = false
 })
 
-local Section = MurderTab:AddSection({ 
-    Name = "Вх" 
+-- Секция "Перегляд через стіни"
+local SectionViewThroughWalls = MurderTab:AddSection({ 
+    Name = "Перегляд через стіни" 
 })
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -3001,8 +3002,6 @@ function IsAlive(Player) -- Проверка, жив ли игрок
     return false
 end
 
--- > Loops < --
-
 RunService.RenderStepped:Connect(function()
     roles = ReplicatedStorage:FindFirstChild("GetPlayerData", true):InvokeServer()
     for i, v in pairs(roles) do
@@ -3020,9 +3019,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- > Переключатель < --
-
-MurderTab:AddToggle({
+SectionViewThroughWalls:AddToggle({
     Name = "Виділення гравців",
     Default = false, -- Изначально выключено
     Callback = function(state)
@@ -3038,88 +3035,8 @@ MurderTab:AddToggle({
     end
 })
 
--- Fake Death Function
-local fakeDeathButton = Section:AddButton({
-    Name = "Фейкова смерть",
-    Callback = function()
-        local humanoid = game:GetService("Players").LocalPlayer.Character.Humanoid
-        if not humanoid.Sit then
-            humanoid.Sit = true
-            wait()
-            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.Angles(math.rad(-90), 0, 0)
-        end
-    end
-})
-
--- Teleport To Map Function
-local teleportToMapButton = Section:AddButton({
-    Name = "Телепорт на карту",
-    Callback = function()
-        for _, v in pairs(workspace:GetDescendants()) do
-            if v:IsA("BasePart") and (v.Name == "Spawn" or v.Name == "PlayerSpawn") and v.Parent.Parent.Name ~= "Lobby" then
-                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.CFrame * CFrame.new(0, 3, 0)
-            end
-        end
-    end
-})
-
--- Teleport To Lobby Function
-local teleportToLobbyButton = Section:AddButton({
-    Name = "Телепорт в лобі",
-    Callback = function()
-        for _, v in pairs(workspace:GetDescendants()) do
-            if v:IsA("BasePart") and v.Parent.Name == "Spawns" and v.Parent.Parent.Name == "Lobby" then
-                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.CFrame * CFrame.new(0, 3, 0)
-            end
-        end
-    end
-})
-
--- ESP функционал
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local roles
-
-function IsAlive(Player)
-    for i, v in pairs(roles) do
-        if Player.Name == i then
-            if not v.Killed and not v.Dead then
-                return true
-            else
-                return false
-            end
-        end
-    end
-end
-
-Murder = nil
-Sheriff = nil
-Hero = nil
-
-game:GetService('RunService').RenderStepped:connect(function()
-    roles = ReplicatedStorage:FindFirstChild("GetPlayerData", true):InvokeServer()
-    for i, v in pairs(roles) do
-        if v.Role == "Murderer" then
-            Murder = i
-        elseif v.Role == "Sheriff" then
-            Sheriff = i
-        elseif v.Role == "Hero" then
-            Hero = i
-        end
-    end
-end)
-
-GunDrop = nil
-workspace.DescendantAdded:Connect(function(part)
-    if part.Name == "GunDrop" then
-        GunDrop = part
-    end
-end)
-
-workspace.DescendantRemoving:Connect(function(part)
-    if part.Name == "GunDrop" then
-        GunDrop = nil
-    end
-end)
+local Esp = false
+local EspOperator = false
 
 function MakeHighlight()
     for _, v in pairs(game.Players:GetChildren()) do
@@ -3160,9 +3077,6 @@ function ClearHighlight()
     end
 end
 
-local Esp = false
-local EspOperator = false
-
 game:GetService('RunService').RenderStepped:connect(function()
     if Esp == true and EspOperator == false then
         EspOperator = true
@@ -3172,7 +3086,7 @@ game:GetService('RunService').RenderStepped:connect(function()
     end
 end)
 
-MurderTab:AddToggle({
+SectionViewThroughWalls:AddToggle({
     Name = "Виділення гравців (2)",
     Default = false,
     Callback = function(State)
@@ -3183,7 +3097,52 @@ MurderTab:AddToggle({
     end
 })
 
-MurderTab:AddButton({
+-- Секция "Телепорт"
+local SectionTeleport = MurderTab:AddSection({ 
+    Name = "Телепорт" 
+})
+
+SectionTeleport:AddButton({
+    Name = "Телепорт на карту",
+    Callback = function()
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("BasePart") and (v.Name == "Spawn" or v.Name == "PlayerSpawn") and v.Parent.Parent.Name ~= "Lobby" then
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.CFrame * CFrame.new(0, 3, 0)
+            end
+        end
+    end
+})
+
+SectionTeleport:AddButton({
+    Name = "Телепорт в лобі",
+    Callback = function()
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("BasePart") and v.Parent.Name == "Spawns" and v.Parent.Parent.Name == "Lobby" then
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.CFrame * CFrame.new(0, 3, 0)
+            end
+        end
+    end
+})
+
+-- Секция "Функції для пістолета"
+local SectionGunFunctions = MurderTab:AddSection({ 
+    Name = "Функції для пістолета" 
+})
+
+GunDrop = nil
+workspace.DescendantAdded:Connect(function(part)
+    if part.Name == "GunDrop" then
+        GunDrop = part
+    end
+end)
+
+workspace.DescendantRemoving:Connect(function(part)
+    if part.Name == "GunDrop" then
+        GunDrop = nil
+    end
+end)
+
+SectionGunFunctions:AddButton({
     Name = "Отримати Gun Drop",
     Callback = function()
         if GunDrop then
@@ -3243,8 +3202,8 @@ local function AutoGetGunActive()
     end
 end
 
-MurderTab:AddToggle({
-    Name = "Auto Get Gun Drop",
+SectionGunFunctions:AddToggle({
+    Name = "Автоматично отримати Gun Drop",
     Default = false,
     Callback = function(State)
         if State then
@@ -3259,8 +3218,8 @@ MurderTab:AddToggle({
 local LocateGun = false
 local LocateGunOperator = false
 
-MurderTab:AddToggle({
-    Name = "Автоматичний телепорт до Gun",
+SectionGunFunctions:AddToggle({
+    Name = "Автоматичне виділення пістолета",
     Default = false,
     Callback = function(State)
         LocateGun = State
@@ -3310,6 +3269,126 @@ game:GetService('RunService').Heartbeat:connect(function()
         end
     end
 end)
+
+-- Секция "Інше"
+local SectionOther = MurderTab:AddSection({ 
+    Name = "Інше" 
+})
+
+local part = Instance.new("Part")
+part.Name = "CameraPart"
+part.Color = Color3.new(0,0,0)
+part.Material = Enum.Material.Plastic
+part.Transparency = 1
+part.Position = Vector3.new(0,10000,0)
+part.Size = Vector3.new(1,0.5,1)
+part.CastShadow = true
+part.Anchored = true
+part.CanCollide = false
+part.Parent = workspace
+
+local MURDERER = nil
+local AvoidMurder = false
+local AvoidOperator = false
+
+local function AvoidReset()
+ MURDERER = nil
+ if AvoidOperator == true then
+   game.Workspace.CurrentCamera.CameraSubject = game.Players.LocalPlayer.Character.Humanoid
+   workspace:FindFirstChild("CameraPart").CFrame = CFrame.new(0,200000,0)
+   game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = AvoidPs
+   AvoidOperator = false
+ end
+end
+
+game:GetService('RunService').RenderStepped:connect(function()
+if AvoidMurder == true then
+   if MURDERER == nil then
+      roles = ReplicatedStorage:FindFirstChild("GetPlayerData", true):InvokeServer()
+      for i, v in pairs(roles) do
+        if v.Role == "Murderer" then
+           Murder = i
+        end
+      end
+
+      for _, v in pairs(game.Players:GetChildren()) do
+        if v ~= game.Players.LocalPlayer and v.Character then
+           if v.Name == Murder and IsAlive(v) then
+              MURDERER = v
+           end
+        end
+      end
+   else
+      if MURDERER.Name ~= game.Players.LocalPlayer.Name then 
+         if MURDERER.Character:FindFirstChild("Knife") or MURDERER.Backpack:FindFirstChild("Knife") then else
+            AvoidReset()
+         end
+         if MURDERER.Character.Humanoid.Health <= 0 then
+            AvoidReset()
+         end
+         wait(0.1)
+         if not game.Players:FindFirstChild(MURDERER.Name) then
+            AvoidReset()
+         end
+         if AvoidOperator == false and math.floor((MURDERER.Character.HumanoidRootPart.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude) <= 20 or AvoidOperator == false and math.floor((MURDERER.Character.HumanoidRootPart.Position - workspace:FindFirstChild("CameraPart").Position).magnitude) <= 20 then
+            AvoidOperator = true
+            local old = game.Players.LocalPlayer.Character:getChildren() 
+            for i=1,#old do 
+              if old[i].Name == "HumanoidRootPart" then 
+                 AvoidPs = old[i].CFrame 
+              end 
+            end
+            workspace:FindFirstChild("CameraPart").CFrame = game.Players.LocalPlayer.Character.Head.CFrame
+            ---Teleport To Lobby
+            for i,v in pairs(workspace:GetDescendants()) do
+              if v:IsA("BasePart") and v.Parent.Name == "Spawns" and v.Parent.Parent.Name == "Lobby" then
+                 game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.CFrame * CFrame.new(0,3,0)
+              end
+            end
+            ---
+            game.Workspace.CurrentCamera.CameraSubject = workspace:FindFirstChild("CameraPart")
+         end
+         if AvoidOperator == true and math.floor((MURDERER.Character.HumanoidRootPart.Position - workspace:FindFirstChild("CameraPart").Position).magnitude) >= 20 then
+            AvoidOperator = false
+            game.Workspace.CurrentCamera.CameraSubject = game.Players.LocalPlayer.Character.Humanoid
+            workspace:FindFirstChild("CameraPart").CFrame = CFrame.new(0,200000,0)
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = AvoidPs
+         end
+      end
+   end
+end
+end)
+
+SectionOther:AddToggle({
+    Name = "Автоматичне уникнення мардера",
+    Default = false,
+    Callback = function(State)
+        AvoidMurder = State
+        if not AvoidMurder then
+            if AvoidOperator == true and MURDERER.Character:FindFirstChild("HumanoidRootPart") then
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = AvoidPs
+            end
+            MURDERER = nil
+            AvoidPs = nil
+            AvoidMurder = false
+            AvoidOperator = false
+            workspace:FindFirstChild("CameraPart").CFrame = CFrame.new(0,200000,0)
+            game.Workspace.CurrentCamera.CameraSubject = game.Players.LocalPlayer.Character.Humanoid
+        end
+    end
+})
+
+SectionOther:AddButton({
+    Name = "Фейкова смерть",
+    Callback = function()
+        local humanoid = game:GetService("Players").LocalPlayer.Character.Humanoid
+        if not humanoid.Sit then
+            humanoid.Sit = true
+            wait()
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.Angles(math.rad(-90), 0, 0)
+        end
+    end
+})
 
 local NonameTab = Window:MakeTab({ 
     Name = "Усяке", 

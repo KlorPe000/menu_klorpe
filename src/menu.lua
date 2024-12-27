@@ -3038,84 +3038,9 @@ MurderTab:AddToggle({
     end
 })
 
-local espEnabled = false
-local checkingThread = nil
-
--- Функция для включения/выключения ESP подсветки для оружия
-local function toggleESP(enabled)
-    local normal = workspace:FindFirstChild("Normal")  -- Здесь ищем нормальную зону, где оружие будет
-    if normal then
-        for _, gunDrop in ipairs(normal:GetChildren()) do
-            if gunDrop.Name == "GunDrop" then  -- Проверяем, является ли объект оружием
-                local highlight = gunDrop:FindFirstChild("Highlight")
-                if enabled and not highlight then
-                    -- Если ESP включен и Highlight нет, создаем его
-                    local highlight = Instance.new("Highlight", gunDrop)
-                    highlight.FillColor = Color3.fromRGB(7, 0, 255)  -- Цвет подсветки
-                    highlight.OutlineTransparency = 0.75  -- Прозрачность контура
-                    highlight.Name = "Highlight"  -- Присваиваем имя, чтобы не создавать несколько подсветок
-                elseif not enabled and highlight then
-                    -- Если ESP выключен и Highlight существует, удаляем его
-                    highlight:Destroy()
-                end
-            end
-        end
-    end
-end
-
--- Функция для постоянной проверки появления новых объектов GunDrop
-local function checkForNewGunDrops()
-    while espEnabled do
-        local normal = workspace:FindFirstChild("Normal")
-        if normal then
-            for _, gunDrop in ipairs(normal:GetChildren()) do
-                if gunDrop.Name == "GunDrop" and not gunDrop:FindFirstChild("Highlight") then
-                    -- Если новый GunDrop появился и у него нет подсветки, добавляем ее
-                    local highlight = Instance.new("Highlight", gunDrop)
-                    highlight.FillColor = Color3.fromRGB(7, 0, 255)
-                    highlight.OutlineTransparency = 0.75
-                    highlight.Name = "Highlight"
-                end
-            end
-        end
-        task.wait(0.5)  -- Пауза перед следующим циклом проверки
-    end
-end
-
--- Слушаем событие появления новых объектов в игре
-workspace.ChildAdded:Connect(function(child)
-    if child.Name == "Normal" and espEnabled then
-        -- Когда появляется зона "Normal" с оружием, включаем ESP
-        toggleESP(true)
-    end
-end)
-
--- Добавляем переключатель для включения и выключения ESP
-MurderTab:AddToggle({
-    Name = "ESP gun", 
-    Default = false,  -- Изначально выключено
-    Callback = function(state)
-        espEnabled = state
-        toggleESP(espEnabled)  -- Включаем/выключаем ESP
-        if espEnabled then
-            -- Если ESP включен, запускаем проверку появления новых объектов
-            if checkingThread then
-                task.cancel(checkingThread)
-            end
-            checkingThread = task.spawn(checkForNewGunDrops)
-        else
-            -- Если ESP выключен, отменяем проверку
-            if checkingThread then
-                task.cancel(checkingThread)
-                checkingThread = nil
-            end
-        end
-    end
-})
-
 -- Fake Death Function
 local fakeDeathButton = Section:AddButton({
-    Name = "Fake Death",
+    Name = "Фейкова смерть",
     Callback = function()
         local humanoid = game:GetService("Players").LocalPlayer.Character.Humanoid
         if not humanoid.Sit then
@@ -3128,7 +3053,7 @@ local fakeDeathButton = Section:AddButton({
 
 -- Teleport To Map Function
 local teleportToMapButton = Section:AddButton({
-    Name = "Teleport To Map",
+    Name = "Телепорт на карту",
     Callback = function()
         for _, v in pairs(workspace:GetDescendants()) do
             if v:IsA("BasePart") and (v.Name == "Spawn" or v.Name == "PlayerSpawn") and v.Parent.Parent.Name ~= "Lobby" then
@@ -3140,7 +3065,7 @@ local teleportToMapButton = Section:AddButton({
 
 -- Teleport To Lobby Function
 local teleportToLobbyButton = Section:AddButton({
-    Name = "Teleport To Lobby",
+    Name = "Телепорт в лобі",
     Callback = function()
         for _, v in pairs(workspace:GetDescendants()) do
             if v:IsA("BasePart") and v.Parent.Name == "Spawns" and v.Parent.Parent.Name == "Lobby" then
@@ -3248,7 +3173,7 @@ game:GetService('RunService').RenderStepped:connect(function()
 end)
 
 MurderTab:AddToggle({
-    Name = "Виділення (2)",
+    Name = "Виділення гравців (2)",
     Default = false,
     Callback = function(State)
         Esp = State
@@ -3257,6 +3182,134 @@ MurderTab:AddToggle({
         end
     end
 })
+
+MurderTab:AddButton({
+    Name = "Отримати Gun Drop",
+    Callback = function()
+        if GunDrop then
+            local old = game.Players.LocalPlayer.Character:GetChildren()
+            local LP
+            for i = 1, #old do
+                if old[i].Name == "HumanoidRootPart" then
+                    LP = old[i].CFrame
+                end
+            end
+            wait()
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = GunDrop.CFrame * CFrame.new(0, 2, 0)
+            wait(0.15)
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = LP
+        else
+            local CoreGui = game:GetService("StarterGui")
+            CoreGui:SetCore("SendNotification", {
+                Title = "Скріпт",
+                Text = "Пістолет не знайдено",
+                Duration = 2.3,
+            })
+        end
+    end
+})
+
+local function AutoGetGunActive()
+    local GunFound = false
+    getgenv().AutoGetGun = true
+    while getgenv().AutoGetGun do
+        spawn(function()
+            if not GunFound and GunDrop then
+                GunFound = true
+                local old = game.Players.LocalPlayer.Character:GetChildren()
+                local LP
+                for i = 1, #old do
+                    if old[i].Name == "HumanoidRootPart" then
+                        LP = old[i].CFrame
+                    end
+                end
+                wait()
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = GunDrop.CFrame * CFrame.new(0, 2, 0)
+                wait(0.15)
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = LP
+                wait(2)
+                if GunDrop then
+                    GunFound = false
+                end
+            end
+            if not GunDrop then
+                GunFound = false
+            end
+            if not game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") or game.Players.LocalPlayer.Character.Humanoid.Health == 0 or game.Players.LocalPlayer.Character.Humanoid.Health <= 1 then
+                GunFound = false
+            end
+        end)
+        wait(0.1)
+    end
+end
+
+MurderTab:AddToggle({
+    Name = "Auto Get Gun Drop",
+    Default = false,
+    Callback = function(State)
+        if State then
+            getgenv().AutoGetGun = true
+            AutoGetGunActive()
+        else
+            getgenv().AutoGetGun = false
+        end
+    end
+})
+
+local LocateGun = false
+local LocateGunOperator = false
+
+MurderTab:AddToggle({
+    Name = "Автоматичний телепорт до Gun",
+    Default = false,
+    Callback = function(State)
+        LocateGun = State
+        if not LocateGun then
+            LocateGunOperator = false
+            for _, v in pairs(game.Workspace:GetDescendants()) do
+                if v.Name == "Gun_Locate" then
+                    v:Destroy()
+                end
+            end
+        end
+    end
+})
+
+game:GetService('RunService').Heartbeat:connect(function()
+    if LocateGun then
+        if GunDrop then
+            if not LocateGunOperator then
+                LocateGunOperator = true
+                if GunDrop and not GunDrop:FindFirstChild("Gun_Locate") then
+                    local highlight = Instance.new("Highlight")
+                    highlight.Name = "Gun_Locate"
+                    highlight.FillColor = Color3.new(1, 1, 0) -- Yellow color
+                    highlight.Parent = GunDrop
+
+                    local BillboardGui = Instance.new("BillboardGui")
+                    local TextLabel = Instance.new("TextLabel")
+
+                    BillboardGui.Parent = GunDrop
+                    BillboardGui.Name = "Gun_Locate"
+                    BillboardGui.AlwaysOnTop = true
+                    BillboardGui.LightInfluence = 1
+                    BillboardGui.Size = UDim2.new(0, 100, 0, 50)
+                    BillboardGui.StudsOffset = Vector3.new(0, 2, 0)
+
+                    TextLabel.Parent = BillboardGui
+                    TextLabel.BackgroundColor3 = Color3.new(1, 1, 0)
+                    TextLabel.BackgroundTransparency = 0.5
+                    TextLabel.Size = UDim2.new(1, 0, 1, 0)
+                    TextLabel.Text = "GUN LOCATE!"
+                    TextLabel.TextColor3 = Color3.new(1, 0, 0)
+                    TextLabel.TextScaled = true
+                end
+            end
+        else
+            LocateGunOperator = false
+        end
+    end
+end)
 
 local NonameTab = Window:MakeTab({ 
     Name = "Усяке", 

@@ -1,7 +1,7 @@
+local oldWarn = warn
+warn = function() end
 local OrionLib = loadstring(game:HttpGet('https://raw.githubusercontent.com/KlorPe000/KlorPeLib/main/source'))()
-if not OrionLib then
-    error("Неможливо завантажити KlorPeLib. Перевірте URL-адресу або підключення до Інтернету.")
-end
+warn = oldWarn
 
 local Window = OrionLib:MakeWindow({
     Name = "KlorPeHub", 

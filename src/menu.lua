@@ -1,7 +1,4 @@
-local oldWarn = warn
-warn = function() end
 local OrionLib = loadstring(game:HttpGet('https://raw.githubusercontent.com/KlorPe000/KlorPeLib/main/source'))()
-warn = oldWarn
 
 local Window = OrionLib:MakeWindow({
     Name = "KlorPeHub", 
@@ -2856,4 +2853,3 @@ NonameTab:AddButton({
         end
     end
 })
-print("Hello World! Це Клорпі")

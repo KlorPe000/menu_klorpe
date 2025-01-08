@@ -2849,7 +2849,7 @@ NonameTab:AddButton({
                     warn("Помилка виконання скрипту:", result)
                 end
             else
-                warn("Неможливо завантажити скрипт з URL:", scriptUrl)
+                warn("Неможливо завантажити скрипт", scriptUrl)
             end
         else
             warn("Скрипт був завантажений і не може бути виконаний повторно.")

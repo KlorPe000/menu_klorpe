@@ -13,21 +13,20 @@ local PlayerTab = Window:MakeTab({
     PremiumOnly = false
 })
 
+-- Переменные
 local walkSpeed = 16
 local jumpHeight = 7
-local fieldOfView = 70  -- Начальное значение FOV
+local fieldOfView = 70
 
--- Переменные для включения и выключения изменений
 local walkSpeedEnabled = false
 local jumpHeightEnabled = false
 local fovEnabled = false
 
--- Дефолтные значения из игры
 local defaultWalkSpeed = 16
 local defaultJumpHeight = 7
 local defaultFieldOfView = 70
 
--- Функция для сброса значений на дефолтные
+-- Функции для сброса значений
 local function resetHumanoid(humanoid)
     humanoid.WalkSpeed = defaultWalkSpeed
     humanoid.JumpHeight = defaultJumpHeight
@@ -37,71 +36,58 @@ local function resetFOV()
     game.Workspace.CurrentCamera.FieldOfView = defaultFieldOfView
 end
 
--- Функция для блокировки изменений
+-- Мониторинг Humanoid
 local function monitorHumanoid(humanoid)
     humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
         if walkSpeedEnabled and humanoid.WalkSpeed ~= walkSpeed then
             humanoid.WalkSpeed = walkSpeed
-        else
-            script.Parent.PlayerTab:SetSliderValue("Швидкість руху", humanoid.WalkSpeed)
         end
     end)
 
     humanoid:GetPropertyChangedSignal("JumpHeight"):Connect(function()
         if jumpHeightEnabled and humanoid.JumpHeight ~= jumpHeight then
             humanoid.JumpHeight = jumpHeight
-        else
-            script.Parent.PlayerTab:SetSliderValue("Висота стрибка", humanoid.JumpHeight)
         end
     end)
-
-    if walkSpeedEnabled then
-        humanoid.WalkSpeed = walkSpeed
-    else
-        humanoid.WalkSpeed = defaultWalkSpeed
-    end
-
-    if jumpHeightEnabled then
-        humanoid.JumpHeight = jumpHeight
-    else
-        humanoid.JumpHeight = defaultJumpHeight
-    end
 end
 
+-- Мониторинг FOV
 local function monitorFOV()
     game.Workspace.CurrentCamera:GetPropertyChangedSignal("FieldOfView"):Connect(function()
         if fovEnabled and game.Workspace.CurrentCamera.FieldOfView ~= fieldOfView then
             game.Workspace.CurrentCamera.FieldOfView = fieldOfView
-        else
-            script.Parent.PlayerTab:SetSliderValue("Поле зору", game.Workspace.CurrentCamera.FieldOfView)
         end
     end)
-
-    if fovEnabled then
-        game.Workspace.CurrentCamera.FieldOfView = fieldOfView
-    else
-        resetFOV()
-    end
 end
 
+-- Настройка персонажа
 local function setupCharacter(character)
     local humanoid = character:WaitForChild("Humanoid")
     if humanoid then
         monitorHumanoid(humanoid)
+        if walkSpeedEnabled then
+            humanoid.WalkSpeed = walkSpeed
+        else
+            humanoid.WalkSpeed = defaultWalkSpeed
+        end
+
+        if jumpHeightEnabled then
+            humanoid.JumpHeight = jumpHeight
+        else
+            humanoid.JumpHeight = defaultJumpHeight
+        end
     end
 end
 
 game.Players.LocalPlayer.CharacterAdded:Connect(setupCharacter)
-
 if game.Players.LocalPlayer.Character then
     setupCharacter(game.Players.LocalPlayer.Character)
 end
 
 monitorFOV()
 
-local Section = PlayerTab:AddSection({
-    Name = "Швідкість"
-})
+-- Секция скорости
+PlayerTab:AddSection({ Name = "Швидкість" })
 
 PlayerTab:AddSlider({
     Name = "Швидкість руху",
@@ -144,9 +130,8 @@ PlayerTab:AddToggle({
     end
 })
 
-local Section = PlayerTab:AddSection({
-    Name = "Стрибки"
-})
+-- Секция прыжков
+PlayerTab:AddSection({ Name = "Стрибки" })
 
 PlayerTab:AddSlider({
     Name = "Висота стрибка",
@@ -189,9 +174,8 @@ PlayerTab:AddToggle({
     end
 })
 
-local Section = PlayerTab:AddSection({
-    Name = "Поле зору"
-})
+-- Секция поля зрения
+PlayerTab:AddSection({ Name = "Поле зору" })
 
 PlayerTab:AddSlider({
     Name = "Поле зору",
@@ -209,7 +193,7 @@ PlayerTab:AddSlider({
     end
 })
 
-local toggleButton = PlayerTab:AddToggle({
+PlayerTab:AddToggle({
     Name = "Вкл/Викл поле зору",
     Default = false,
     Callback = function(State)
@@ -221,12 +205,6 @@ local toggleButton = PlayerTab:AddToggle({
         end
     end
 })
-
-game:GetService("UserInputService").JumpRequest:Connect(function()
-    if InfiniteJumpEnabled then
-        game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass('Humanoid'):ChangeState("Jumping")
-    end
-end)
 
 local Section = PlayerTab:AddSection({
     Name = "Інше"

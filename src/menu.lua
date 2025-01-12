@@ -794,10 +794,8 @@ local vehicle = nil
 local function onSeated(active, seat)
     if active and seat:IsA("VehicleSeat") then
         vehicle = seat
-        print("Игрок сел в транспортное средство:", seat.Name)
     else
         vehicle = nil
-        print("Игрок вышел из транспортного средства")
     end
 end
 
@@ -813,12 +811,10 @@ local function toggleFly()
     flying = not flying
     if flying then
         if not vehicle then
-            print("Вы не находитесь в транспортном средстве!")
+            print("Ви не знаходитесь у транспортному засобі!")
             flying = false
             return
         end
-
-        print("Транспортное средство найдено:", vehicle.Name)
 
         local bg = Instance.new("BodyGyro", vehicle)
         bg.P = 9e4
@@ -844,8 +840,6 @@ local function toggleFly()
             bv:Destroy()
         end)
     else
-        -- Отключаем полет
-        print("Полет выключен.")
     end
 end
 
@@ -1488,13 +1482,13 @@ UniversalSection:AddToggle({
         if getgenv().ExunysDeveloperAimbot.FOVCircle then
             getgenv().ExunysDeveloperAimbot.FOVCircle.Visible = Value
         else
-            warn("FOVCircle is not initialized!")
+            warn("FOWCircle не ініціалізовано!")
         end
 
         if getgenv().ExunysDeveloperAimbot.FOVCircleOutline then
             getgenv().ExunysDeveloperAimbot.FOVCircleOutline.Visible = Value
         else
-            warn("FOVCircleOutline is not initialized!")
+            warn("FOVCircleOutline не ініціалізовано!")
         end
     end
 })
@@ -1862,12 +1856,12 @@ local function updatePlayerList()
         playerDropdown:Refresh(players, true)
     else
         playerDropdown = Section:AddDropdown({
-            Name = "Выберите игрока",
+            Name = "Виберіть гравця",
             Options = players,
             Default = "None",
             Callback = function(selected)
                 selectedPlayer = selected
-                print("Выбранный игрок:", selected)
+                print("Вибраний гравець:", selected)
             end
         })
     end
@@ -2598,7 +2592,7 @@ EmoteTab:AddButton({
     Callback = function()
         if scriptExecuted then
             -- Если скрипт уже был запущен, выходим из функции
-            print("Скрипт уже запущено і не може бути запущено повторно!")
+            print("Скрипт вже запущено і не може бути запущено повторно!")
             return
         end
 
@@ -2615,7 +2609,6 @@ EmoteTab:AddButton({
         -- После первого запуска "удаляем" RusoresScript и блокируем повторный запуск
         RusoresScript = nil
         scriptExecuted = true -- Устанавливаем флаг, что скрипт был запущен
-        print("Скрипт успішно запущено і тепер повністю вимкнено!")
     end
 })
 
@@ -2637,12 +2630,12 @@ local function updatePlayerList()
         playerDropdown:Refresh(players, true)
     else
         playerDropdown = FlingTab:AddDropdown({
-            Name = "Select Player",
+            Name = "Виберіть гравця",
             Options = players,
             Default = "None",
             Callback = function(selected)
                 selectedPlayer = selected
-                print("Selected player:", selected)
+                print("Вибраний гравець:", selected)
             end
         })
     end
@@ -2662,7 +2655,7 @@ FlingTab:AddButton({
             if playerToFling then
                 miniFling(playerToFling)
             else
-                warn("Гравець не знайдено")
+                warn("Гравця не знайдено")
             end
         else
             warn("Виберіть гравця для флінгу")
@@ -2792,7 +2785,7 @@ function miniFling(playerToFling)
         elseif not n and not o and p and q then
             v(q)
         else
-            fu.notification("Can't find a proper part of target player to fling.")
+            fu.notification("Не вдається знайти належну частину цього гравця, щоб зафлінгити.")
         end
         z:Destroy()
         j:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
@@ -2815,7 +2808,7 @@ function miniFling(playerToFling)
 end
 
 local NonameTab = Window:MakeTab({ 
-    Name = "Усяке", 
+    Name = "Індивідуальні скрипти", 
     Icon = "rbxassetid://17404114716",
     PremiumOnly = false
 })

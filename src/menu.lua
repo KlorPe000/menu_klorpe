@@ -1852,42 +1852,37 @@ local Section = TPTab:AddSection({
 local playerDropdown = nil
 local selectedPlayer = nil
 
--- Создаем выпадающий список игроков
-playerDropdown = Section:AddDropdown({
-    Name = "Виберіте гравця",
-    Default = "",
-    Options = {},
-    Callback = function(selected)
-        selectedPlayer = selected
-    end
-})
-
--- Обновляем список игроков в реальном времени
+-- Создаем динамический список игроков
 local function updatePlayerList()
-    local players = game:GetService("Players"):GetPlayers()
-    local playerNames = {}
-
-    for _, player in ipairs(players) do
-        if player.Name ~= game.Players.LocalPlayer.Name then
-            table.insert(playerNames, player.Name)
-        end
+    local players = {}
+    for _, player in pairs(game.Players:GetPlayers()) do
+        table.insert(players, player.Name)
     end
-
-    playerDropdown:Refresh(playerNames)
+    if playerDropdown then
+        playerDropdown:Refresh(players, true)
+    else
+        playerDropdown = Section:AddDropdown({
+            Name = "Виберіте гравця",
+            Options = players,
+            Default = "",
+            Callback = function(selected)
+                selectedPlayer = selected
+            end
+        })
+    end
 end
 
--- Обновляем список игроков при входе/выходе игроков
-local Players = game:GetService("Players")
-Players.PlayerAdded:Connect(updatePlayerList)
-Players.PlayerRemoving:Connect(updatePlayerList)
+-- Обновляем список игроков при входе/выходе
 updatePlayerList()
+game.Players.PlayerAdded:Connect(updatePlayerList)
+game.Players.PlayerRemoving:Connect(updatePlayerList)
 
 -- Кнопка для телепортации
 Section:AddButton({
     Name = "Телепортувати",
     Callback = function()
         if selectedPlayer then
-            local targetPlayer = Players:FindFirstChild(selectedPlayer)
+            local targetPlayer = game.Players:FindFirstChild(selectedPlayer)
             if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
                 local localPlayer = game.Players.LocalPlayer
                 local localCharacter = localPlayer.Character or localPlayer.CharacterAdded:Wait()

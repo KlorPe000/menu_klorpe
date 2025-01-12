@@ -25,7 +25,7 @@ local fovEnabled = false
 local defaultWalkSpeed = 16
 local defaultJumpHeight = 7
 local defaultFieldOfView = 70
-
+ 
 -- Функции для сброса значений
 local function resetHumanoid(humanoid)
     humanoid.WalkSpeed = defaultWalkSpeed

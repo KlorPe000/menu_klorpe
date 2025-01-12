@@ -2626,43 +2626,32 @@ local FlingTab = Window:MakeTab({
     PremiumOnly = false
 })
 
--- Создаем выпадающий список игроков
-local playerDropdown = FlingTab:AddDropdown({
-    Name = "Виберіть гравця",
-    Default = "",
-    Options = {},
-    Callback = function(selected)
-        selectedPlayer = selected
-    end
-})
-
--- Обновляем список игроков в реальном времени
+-- Создаем динамический список игроков
+local playerDropdown
 local function updatePlayerList()
-    local players = game:GetService("Players"):GetPlayers()
-    local playerNames = {}
-
-    -- Добавляем в список только тех игроков, которые присутствуют на сервере
-    for _, player in ipairs(players) do
-        if player.Name ~= game.Players.LocalPlayer.Name then
-            -- Проверяем, что игрок еще существует
-            if game:GetService("Players"):FindFirstChild(player.Name) then
-                -- Проверяем, не был ли этот игрок уже добавлен в список
-                if not table.find(playerNames, player.Name) then
-                    table.insert(playerNames, player.Name)
-                end
-            end
-        end
+    local players = {}
+    for _, player in pairs(game.Players:GetPlayers()) do
+        table.insert(players, player.Name)
     end
-
-    -- Обновляем выпадающий список с уникальными игроками
-    playerDropdown:Refresh(playerNames)
+    if playerDropdown then
+        playerDropdown:Refresh(players, true)
+    else
+        playerDropdown = FlingTab:AddDropdown({
+            Name = "Select Player",
+            Options = players,
+            Default = "None",
+            Callback = function(selected)
+                selectedPlayer = selected
+                print("Selected player:", selected)
+            end
+        })
+    end
 end
 
--- Обновляем список игроков при входе/выходе игроков
-local Players = game:GetService("Players")
-Players.PlayerAdded:Connect(updatePlayerList)
-Players.PlayerRemoving:Connect(updatePlayerList)
+-- Обновляем список игроков при подключении/отключении
 updatePlayerList()
+game.Players.PlayerAdded:Connect(updatePlayerList)
+game.Players.PlayerRemoving:Connect(updatePlayerList)
 
 -- Создаем кнопку для выполнения флинга
 FlingTab:AddButton({

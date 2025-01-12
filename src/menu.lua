@@ -1809,6 +1809,87 @@ AimTab:AddSlider({
     end
 })
 
+local DisplayNameEnabled = false
+
+-- Имя игрока, который не должен отображаться
+local LocalPlayer = game.Players.LocalPlayer
+
+-- Функция для создания или удаления BillboardGui с текстом
+local function updateDisplayNameGui(player)
+    local character = player.Character or player.CharacterAdded:Wait()
+    local head = character:WaitForChild("Head", 5) -- Ожидаем появления головы с таймаутом
+    if not head then return end
+
+    local existingGui = head:FindFirstChild("DisplayNameGui")
+
+    if DisplayNameEnabled and player ~= LocalPlayer then
+        if not existingGui then
+            local billboardGui = Instance.new("BillboardGui")
+            billboardGui.Name = "DisplayNameGui"
+            billboardGui.Adornee = head
+            billboardGui.Size = UDim2.new(4, 0, 1, 0) -- Настраиваем размер
+            billboardGui.StudsOffset = Vector3.new(0, 2, 0) -- Поднимаем текст над головой
+            billboardGui.AlwaysOnTop = true
+
+            local textLabel = Instance.new("TextLabel", billboardGui)
+            textLabel.Size = UDim2.new(1, 0, 1, 0)
+            textLabel.BackgroundTransparency = 1
+            textLabel.Text = player.Name -- Устанавливаем внутреннее имя игрока
+            textLabel.TextColor3 = Color3.new(1, 1, 1) -- Белый цвет текста
+            textLabel.TextStrokeTransparency = 0.5 -- Добавляем обводку текста
+            textLabel.Font = Enum.Font.GothamBold -- Шрифт
+            textLabel.TextScaled = true -- Масштабирование текста
+
+            billboardGui.Parent = head
+        end
+    else
+        if existingGui then
+            existingGui:Destroy()
+        end
+    end
+end
+
+-- Функция для обновления всех игроков
+local function updateAllDisplayNames()
+    for _, player in ipairs(game.Players:GetPlayers()) do
+        if player.Character then
+            updateDisplayNameGui(player)
+        end
+    end
+end
+
+-- Подключаем обработчик для новых игроков
+local function onPlayerAdded(player)
+    player.CharacterAdded:Connect(function()
+        task.wait(0.1) -- Ждём немного, чтобы персонаж полностью загрузился
+        updateDisplayNameGui(player)
+    end)
+
+    if player.Character then
+        updateDisplayNameGui(player)
+    end
+end
+
+game.Players.PlayerAdded:Connect(onPlayerAdded)
+
+for _, player in ipairs(game.Players:GetPlayers()) do
+    onPlayerAdded(player)
+end
+
+-- Добавляем секцию и переключатель
+local Section = AimTab:AddSection({
+    Name = "ESP налаштування"
+})
+
+AimTab:AddToggle({
+    Name = "Показать нікнейм",
+    Default = false,
+    Callback = function(state)
+        DisplayNameEnabled = state
+        updateAllDisplayNames()
+    end
+})
+
 local Section = AimTab:AddSection({
     Name = "Бокс"
 })

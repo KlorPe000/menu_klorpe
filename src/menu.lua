@@ -174,6 +174,20 @@ PlayerTab:AddToggle({
     end
 })
 
+game:GetService("UserInputService").JumpRequest:connect(function()
+	if InfiniteJumpEnabled then
+		game:GetService"Players".LocalPlayer.Character:FindFirstChildOfClass'Humanoid':ChangeState("Jumping")
+	end
+end)
+
+PlayerTab:AddToggle({
+    Name = "Нескінченні стрибки",
+    Default = false,
+    Callback = function(State)
+        InfiniteJumpEnabled = State
+    end
+})
+
 -- Секция поля зрения
 PlayerTab:AddSection({ Name = "Поле зору" })
 
@@ -208,14 +222,6 @@ PlayerTab:AddToggle({
 
 local Section = PlayerTab:AddSection({
     Name = "Інше"
-})
-
-PlayerTab:AddToggle({
-    Name = "Нескінченні стрибки",
-    Default = false,
-    Callback = function(State)
-        InfiniteJumpEnabled = State
-    end
 })
 
 local Noclip = nil
@@ -265,7 +271,7 @@ end
 function noclip()
     Clip = false
     cachePlayerParts()
-    
+
     local vehicle = getVehicle()
     if vehicle then
         cacheVehicleParts(vehicle)
@@ -313,6 +319,17 @@ function clip()
     end
 end
 
+-- Обработчик респавна персонажа
+local player = game.Players.LocalPlayer
+player.CharacterAdded:Connect(function(character)
+    character:WaitForChild("Humanoid")
+    cachePlayerParts()
+    if not Clip then
+        noclip()
+    end
+end)
+
+-- Пример использования Toggle
 PlayerTab:AddToggle({
     Name = "Нокліп",
     Default = false,

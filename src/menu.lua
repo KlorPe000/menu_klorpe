@@ -1656,7 +1656,9 @@ local localPlayer = Players.LocalPlayer
 local HighlightEnabled = false -- Начальное состояние Highlight (выключено)
 local UseTeamColorForHighlight = true -- Использовать ли командные цвета для Highlight
 local UpdateInterval = 2 -- Интервал в секундах для регулярной проверки
+local MaxHighlights = 30 -- Максимальное количество отображаемых Highlight
 
+-- Очистка всех Highlight
 local function clearAllHighlights()
     for _, player in pairs(Players:GetPlayers()) do
         if player.Character then
@@ -1669,6 +1671,7 @@ local function clearAllHighlights()
     end
 end
 
+-- Создание Highlight
 local function createHighlight(player, character)
     -- Удаляем старый Highlight
     for _, highlight in pairs(character:GetChildren()) do
@@ -1694,41 +1697,70 @@ local function createHighlight(player, character)
     highlight.FillTransparency = 0.5
     highlight.OutlineTransparency = 0
     highlight.Parent = character
-
 end
 
-local function applyHighlight()
+-- Получение списка ближайших игроков
+local function getClosestPlayers()
+    local closestPlayers = {}
+
+    if localPlayer.Character and localPlayer.Character.PrimaryPart then
+        local localPosition = localPlayer.Character.PrimaryPart.Position
+
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= localPlayer and player.Character and player.Character.PrimaryPart then
+                local distance = (localPosition - player.Character.PrimaryPart.Position).Magnitude
+                table.insert(closestPlayers, { player = player, distance = distance })
+            end
+        end
+
+        -- Сортировка по расстоянию
+        table.sort(closestPlayers, function(a, b)
+            return a.distance < b.distance
+        end)
+    end
+
+    return closestPlayers
+end
+
+-- Обновление Highlight с учётом ближайших игроков
+local function applyDynamicHighlight()
     if not HighlightEnabled then return end
 
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= localPlayer and player.Character then
-            createHighlight(player, player.Character)
+    local closestPlayers = getClosestPlayers()
+
+    -- Показываем Highlight только для ближайших игроков
+    for i, data in ipairs(closestPlayers) do
+        if i <= MaxHighlights then
+            local player = data.player
+            if player.Character then
+                createHighlight(player, player.Character)
+            end
+        else
+            -- Убираем Highlight у остальных
+            local player = data.player
+            if player.Character then
+                for _, highlight in pairs(player.Character:GetChildren()) do
+                    if highlight:IsA("Highlight") then
+                        highlight:Destroy()
+                    end
+                end
+            end
         end
     end
 end
 
+-- Постоянный мониторинг персонажей
 local function monitorCharacters()
     while HighlightEnabled do
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= localPlayer then
-                local character = player.Character
-                if character and not character:FindFirstChildOfClass("Highlight") then
-                    createHighlight(player, character)
-                end
-            end
-        end
+        applyDynamicHighlight()
         wait(UpdateInterval)
     end
 end
 
--- Включение Highlight для всех игроков
+-- Включение Highlight
 local function activateHighlight()
     HighlightEnabled = true
     clearAllHighlights()
-
-    applyHighlight()
-
-    -- Запускаем постоянный мониторинг
     task.spawn(monitorCharacters)
 end
 

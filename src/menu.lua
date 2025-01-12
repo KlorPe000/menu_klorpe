@@ -1655,6 +1655,7 @@ local localPlayer = Players.LocalPlayer
 
 local HighlightEnabled = false -- Начальное состояние Highlight (выключено)
 local UseTeamColorForHighlight = true -- Использовать ли командные цвета для Highlight
+local ShowOnlyEnemies = false -- Переключатель "Тільки противники"
 local UpdateInterval = 2 -- Интервал в секундах для регулярной проверки
 local MaxHighlights = 30 -- Максимальное количество отображаемых Highlight
 
@@ -1722,11 +1723,32 @@ local function getClosestPlayers()
     return closestPlayers
 end
 
--- Обновление Highlight с учётом ближайших игроков
+-- Фильтрация игроков по командам
+local function filterPlayersByTeam(players)
+    local filteredPlayers = {}
+
+    for _, data in ipairs(players) do
+        local player = data.player
+        if ShowOnlyEnemies then
+            -- Показываем только противников
+            if player.Team ~= localPlayer.Team then
+                table.insert(filteredPlayers, data)
+            end
+        else
+            -- Показываем всех
+            table.insert(filteredPlayers, data)
+        end
+    end
+
+    return filteredPlayers
+end
+
+-- Обновление Highlight с учётом ближайших игроков и команды
 local function applyDynamicHighlight()
     if not HighlightEnabled then return end
 
     local closestPlayers = getClosestPlayers()
+    closestPlayers = filterPlayersByTeam(closestPlayers) -- Фильтруем по командам
 
     -- Показываем Highlight только для ближайших игроков
     for i, data in ipairs(closestPlayers) do
@@ -1855,6 +1877,18 @@ AimTab:AddToggle({
     Default = false,
     Callback = function(state)
         UseTeamColorForHighlight = state
+        if HighlightEnabled then
+            deactivateHighlight()
+            activateHighlight()
+        end
+    end
+})
+
+AimTab:AddToggle({
+    Name = "Тільки противники",
+    Default = false,
+    Callback = function(state)
+        ShowOnlyEnemies = state
         if HighlightEnabled then
             deactivateHighlight()
             activateHighlight()

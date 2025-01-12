@@ -2808,7 +2808,7 @@ function miniFling(playerToFling)
 end
 
 local NonameTab = Window:MakeTab({ 
-    Name = "Індивідуальні   /   скрипти", 
+    Name = "Індивідуальні\n    скріпти", 
     Icon = "rbxassetid://17404114716",
     PremiumOnly = false
 })

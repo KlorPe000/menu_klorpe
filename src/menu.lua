@@ -1880,7 +1880,7 @@ game.Players.PlayerAdded:Connect(updatePlayerList)
 game.Players.PlayerRemoving:Connect(updatePlayerList)
 
 -- Кнопка для телепортації
-FlingSection:AddButton({
+TPTab:AddButton({
     Name = "Teleport",
     Callback = function()
         if selectedPlayer then

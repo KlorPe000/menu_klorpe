@@ -1848,46 +1848,43 @@ local Section = TPTab:AddSection({
     Name = "Телепорт" 
 })
 
--- Список игроков для выбора
-local playerDropdown = nil
-local selectedPlayer = nil
+-- Створюємо динамічний список гравців
+local playerDropdown
+local selectedPlayer
 
--- Создаем выпадающий список игроков
-playerDropdown = Section:AddDropdown({
-    Name = "Виберіте гравця",
-    Default = "",
-    Options = {},
-    Callback = function(selected)
-        selectedPlayer = selected
-    end
-})
-
--- Обновляем список игроков в реальном времени
 local function updatePlayerList()
-    local players = game:GetService("Players"):GetPlayers()
-    local playerNames = {}
-
-    for _, player in ipairs(players) do
+    local players = {}
+    for _, player in pairs(game.Players:GetPlayers()) do
         if player.Name ~= game.Players.LocalPlayer.Name then
-            table.insert(playerNames, player.Name)
+            table.insert(players, player.Name)
         end
     end
-
-    playerDropdown:Refresh(playerNames)
+    if playerDropdown then
+        playerDropdown:Refresh(players, true)
+    else
+        playerDropdown = FlingSection:AddDropdown({
+            Name = "Select Player",
+            Options = players,
+            Default = "None",
+            Callback = function(selected)
+                selectedPlayer = selected
+                print("Selected player:", selected)
+            end
+        })
+    end
 end
 
--- Обновляем список игроков при входе/выходе игроков
-local Players = game:GetService("Players")
-Players.PlayerAdded:Connect(updatePlayerList)
-Players.PlayerRemoving:Connect(updatePlayerList)
+-- Оновлюємо список гравців при підключенні/відключенні
 updatePlayerList()
+game.Players.PlayerAdded:Connect(updatePlayerList)
+game.Players.PlayerRemoving:Connect(updatePlayerList)
 
--- Кнопка для телепортации
-Section:AddButton({
-    Name = "Телепортувати",
+-- Кнопка для телепортації
+FlingSection:AddButton({
+    Name = "Teleport",
     Callback = function()
         if selectedPlayer then
-            local targetPlayer = Players:FindFirstChild(selectedPlayer)
+            local targetPlayer = game.Players:FindFirstChild(selectedPlayer)
             if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
                 local localPlayer = game.Players.LocalPlayer
                 local localCharacter = localPlayer.Character or localPlayer.CharacterAdded:Wait()
@@ -1897,10 +1894,10 @@ Section:AddButton({
                     localHRP.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
                 end
             else
-                warn("Цього гравця не знайдено або його персонаж недоступний.")
+                warn("Player not found or their character is unavailable.")
             end
         else
-            warn("Гравеця не вибрано.")
+            warn("No player selected.")
         end
     end
 })

@@ -811,7 +811,6 @@ local function toggleFly()
     flying = not flying
     if flying then
         if not vehicle then
-            print("Ви не знаходитесь у транспортному засобі!")
             flying = false
             return
         end
@@ -1030,31 +1029,41 @@ getgenv().ExunysDeveloperAimbot.Settings = getgenv().ExunysDeveloperAimbot.Setti
     AliveCheck = false,
     WallCheck = false
 }
+
 UniversalSection:AddToggle({
     Name = "Перевірка на живого",
     Default = getgenv().ExunysDeveloperAimbot.Settings.AliveCheck,
-    Default = true,
     Callback = function(Value)
-        getgenv().ExunysDeveloperAimbot.Settings.AliveCheck = Value
+        -- Проверяем, включен ли Aimbot
+        if isAimbotEnabled then
+            getgenv().ExunysDeveloperAimbot.Settings.AliveCheck = Value
+        end
     end
 })
+
 -- Добавление переключателей в UI
 UniversalSection:AddToggle({
     Name = "Перевірка команди",
     Default = getgenv().ExunysDeveloperAimbot.Settings.TeamCheck,
-    Default = false,
     Callback = function(Value)
-        getgenv().ExunysDeveloperAimbot.Settings.TeamCheck = Value
+        -- Проверяем, включен ли Aimbot
+        if isAimbotEnabled then
+            getgenv().ExunysDeveloperAimbot.Settings.TeamCheck = Value
+        end
     end
 })
+
 UniversalSection:AddToggle({
     Name = "Перевірка стін",
     Default = getgenv().ExunysDeveloperAimbot.Settings.WallCheck,
-    Default = false,
     Callback = function(Value)
-        getgenv().ExunysDeveloperAimbot.Settings.WallCheck = Value
+        -- Проверяем, включен ли Aimbot
+        if isAimbotEnabled then
+            getgenv().ExunysDeveloperAimbot.Settings.WallCheck = Value
+        end
     end
 })
+
 -- Функция инициализации аимбота
 local function InitializeAimbot()
     local game, workspace = game, workspace
@@ -1395,19 +1404,23 @@ for _, part in ipairs(bodyParts) do
 end
 
 local selectedPart = "Head" -- Значение по умолчанию
+
 UniversalSection:AddDropdown({
     Name = "Виберіть частину тіла",
     Default = translations[selectedPart],
     Options = displayOptions,
     Callback = function(Value)
-        -- Найти оригинальное название по переводу
-        for original, translation in pairs(translations) do
-            if translation == Value then
-                selectedPart = original
-                break
+        -- Проверяем, включен ли Aimbot
+        if isAimbotEnabled then
+            -- Найти оригинальное название по переводу
+            for original, translation in pairs(translations) do
+                if translation == Value then
+                    selectedPart = original
+                    break
+                end
             end
+            getgenv().ExunysDeveloperAimbot.Settings.LockPart = selectedPart
         end
-        getgenv().ExunysDeveloperAimbot.Settings.LockPart = selectedPart
     end
 })
 
@@ -1476,19 +1489,18 @@ UniversalSection:AddToggle({
     Name = "Видимість FOV",
     Default = getgenv().ExunysDeveloperAimbot.FOVSettings.Visible,
     Callback = function(Value)
-        getgenv().ExunysDeveloperAimbot.FOVSettings.Visible = Value
+        -- Проверяем, включен ли Aimbot перед изменением видимости FOV
+        if isAimbotEnabled then
+            getgenv().ExunysDeveloperAimbot.FOVSettings.Visible = Value
 
-        -- Проверяем перед изменением свойства
-        if getgenv().ExunysDeveloperAimbot.FOVCircle then
-            getgenv().ExunysDeveloperAimbot.FOVCircle.Visible = Value
-        else
-            warn("FOWCircle не ініціалізовано!")
-        end
+            -- Проверяем перед изменением свойства
+            if getgenv().ExunysDeveloperAimbot.FOVCircle then
+                getgenv().ExunysDeveloperAimbot.FOVCircle.Visible = Value
+            end
 
-        if getgenv().ExunysDeveloperAimbot.FOVCircleOutline then
-            getgenv().ExunysDeveloperAimbot.FOVCircleOutline.Visible = Value
-        else
-            warn("FOVCircleOutline не ініціалізовано!")
+            if getgenv().ExunysDeveloperAimbot.FOVCircleOutline then
+                getgenv().ExunysDeveloperAimbot.FOVCircleOutline.Visible = Value
+            end
         end
     end
 })
@@ -1652,12 +1664,13 @@ end
 
 local Players = game:GetService("Players")
 local localPlayer = Players.LocalPlayer
+local localCharacter = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+local localRootPart = localCharacter:WaitForChild("HumanoidRootPart")
 
 local HighlightEnabled = false -- Начальное состояние Highlight (выключено)
 local UseTeamColorForHighlight = true -- Использовать ли командные цвета для Highlight
-local ShowOnlyEnemies = false -- Переключатель "Тільки противники"
+local ShowOnlyEnemies = false -- Переключатель "Только противники"
 local UpdateInterval = 2 -- Интервал в секундах для регулярной проверки
-local MaxHighlights = 30 -- Максимальное количество отображаемых Highlight
 
 -- Очистка всех Highlight
 local function clearAllHighlights()
@@ -1700,78 +1713,47 @@ local function createHighlight(player, character)
     highlight.Parent = character
 end
 
--- Получение списка ближайших игроков
-local function getClosestPlayers()
-    local closestPlayers = {}
+-- Поиск игроков, упорядоченных по расстоянию
+local function getPlayersSortedByDistance()
+    local sortedPlayers = {}
 
-    if localPlayer.Character and localPlayer.Character.PrimaryPart then
-        local localPosition = localPlayer.Character.PrimaryPart.Position
-
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= localPlayer and player.Character and player.Character.PrimaryPart then
-                local distance = (localPosition - player.Character.PrimaryPart.Position).Magnitude
-                table.insert(closestPlayers, { player = player, distance = distance })
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= localPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            if ShowOnlyEnemies and player.Team == localPlayer.Team then
+                continue
             end
-        end
 
-        -- Сортировка по расстоянию
-        table.sort(closestPlayers, function(a, b)
-            return a.distance < b.distance
-        end)
-    end
+            local targetRootPart = player.Character.HumanoidRootPart
+            local distance = (targetRootPart.Position - localRootPart.Position).Magnitude
 
-    return closestPlayers
-end
-
--- Фильтрация игроков по командам
-local function filterPlayersByTeam(players)
-    local filteredPlayers = {}
-
-    for _, data in ipairs(players) do
-        local player = data.player
-        if ShowOnlyEnemies then
-            -- Показываем только противников
-            if player.Team ~= localPlayer.Team then
-                table.insert(filteredPlayers, data)
-            end
-        else
-            -- Показываем всех
-            table.insert(filteredPlayers, data)
+            table.insert(sortedPlayers, {Player = player, Distance = distance})
         end
     end
 
-    return filteredPlayers
+    -- Сортировка по расстоянию
+    table.sort(sortedPlayers, function(a, b)
+        return a.Distance < b.Distance
+    end)
+
+    return sortedPlayers
 end
 
--- Обновление Highlight с учётом ближайших игроков и команды
+-- Обновление Highlight
 local function applyDynamicHighlight()
     if not HighlightEnabled then return end
 
-    local closestPlayers = getClosestPlayers()
-    closestPlayers = filterPlayersByTeam(closestPlayers) -- Фильтруем по командам
+    clearAllHighlights() -- Сначала очищаем все Highlight
 
-    -- Показываем Highlight только для ближайших игроков
-    for i, data in ipairs(closestPlayers) do
-        if i <= MaxHighlights then
-            local player = data.player
-            if player.Character then
-                createHighlight(player, player.Character)
-            end
-        else
-            -- Убираем Highlight у остальных
-            local player = data.player
-            if player.Character then
-                for _, highlight in pairs(player.Character:GetChildren()) do
-                    if highlight:IsA("Highlight") then
-                        highlight:Destroy()
-                    end
-                end
-            end
+    local playersSorted = getPlayersSortedByDistance()
+    for _, data in ipairs(playersSorted) do
+        local player = data.Player
+        if player.Character then
+            createHighlight(player, player.Character)
         end
     end
 end
 
--- Постоянный мониторинг персонажей
+-- Постоянный мониторинг
 local function monitorCharacters()
     while HighlightEnabled do
         applyDynamicHighlight()
@@ -1810,7 +1792,7 @@ AimTab:AddSlider({
 })
 
 local Section = AimTab:AddSection({
-    Name = "ESP налаштування"
+    Name = "ESP настройки"
 })
 
 -- Флаги для управления ESP
@@ -1864,12 +1846,13 @@ AimTab:AddToggle({
 -- Функция для отображения имени
 local LocalPlayer = game.Players.LocalPlayer
 
--- Обновление имени игрока
 local function updateNameGui(player)
     if player == LocalPlayer then return end
+
     local character = player.Character or player.CharacterAdded:Wait()
     local rootPart = character:WaitForChild("HumanoidRootPart", 5)
     if not rootPart then return end
+
     local existingGui = rootPart:FindFirstChild("NameGui")
     if NameDisplayEnabled then
         if not existingGui then
@@ -1894,21 +1877,13 @@ local function updateNameGui(player)
     end
 end
 
--- Обновление всех имён
-local function updateAllNames()
-    for _, player in ipairs(game.Players:GetPlayers()) do
-        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            updateNameGui(player)
-        end
-    end
-end
-
--- Обновление расстояний
 local function updateDistanceGui(player)
     if player == LocalPlayer then return end
+
     local character = player.Character or player.CharacterAdded:Wait()
     local rootPart = character:WaitForChild("HumanoidRootPart", 5)
     if not rootPart then return end
+
     local existingGui = rootPart:FindFirstChild("DistanceGui")
     if DistanceDisplayEnabled then
         if not existingGui then
@@ -1939,12 +1914,16 @@ local function updateDistanceGui(player)
     end
 end
 
--- Обновление всех расстояний
+-- Обновление всех имен и расстояний
+local function updateAllNames()
+    for _, player in ipairs(game.Players:GetPlayers()) do
+        updateNameGui(player)
+    end
+end
+
 local function updateAllDistances()
     for _, player in ipairs(game.Players:GetPlayers()) do
-        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            updateDistanceGui(player)
-        end
+        updateDistanceGui(player)
     end
 end
 
@@ -1965,86 +1944,6 @@ game:GetService("RunService").RenderStepped:Connect(function()
     end
 end)
 
-local DisplayNameEnabled = false
-
--- Имя игрока, который не должен отображаться
-local LocalPlayer = game.Players.LocalPlayer
-
--- Функция для создания или удаления BillboardGui с текстом
-local function updateDisplayNameGui(player)
-    local character = player.Character or player.CharacterAdded:Wait()
-    local head = character:WaitForChild("Head", 5) -- Ожидаем появления головы с таймаутом
-    if not head then return end
-
-    local existingGui = head:FindFirstChild("DisplayNameGui")
-
-    if DisplayNameEnabled and player ~= LocalPlayer then
-        if not existingGui then
-            local billboardGui = Instance.new("BillboardGui")
-            billboardGui.Name = "DisplayNameGui"
-            billboardGui.Adornee = head
-            billboardGui.Size = UDim2.new(4, 0, 1, 0) -- Настраиваем размер
-            billboardGui.StudsOffset = Vector3.new(0, 2, 0) -- Поднимаем текст над головой
-            billboardGui.AlwaysOnTop = true
-
-            local textLabel = Instance.new("TextLabel", billboardGui)
-            textLabel.Size = UDim2.new(1, 0, 1, 0)
-            textLabel.BackgroundTransparency = 1
-            textLabel.Text = player.Name -- Устанавливаем внутреннее имя игрока
-            textLabel.TextColor3 = Color3.new(1, 1, 1) -- Белый цвет текста
-            textLabel.TextStrokeTransparency = 0.5 -- Добавляем обводку текста
-            textLabel.Font = Enum.Font.GothamBold -- Шрифт
-            textLabel.TextScaled = true -- Масштабирование текста
-
-            billboardGui.Parent = head
-        end
-    else
-        if existingGui then
-            existingGui:Destroy()
-        end
-    end
-end
-
--- Функция для обновления всех игроков
-local function updateAllDisplayNames()
-    for _, player in ipairs(game.Players:GetPlayers()) do
-        if player.Character then
-            updateDisplayNameGui(player)
-        end
-    end
-end
-
--- Подключаем обработчик для новых игроков
-local function onPlayerAdded(player)
-    player.CharacterAdded:Connect(function()
-        task.wait(0.1) -- Ждём немного, чтобы персонаж полностью загрузился
-        updateDisplayNameGui(player)
-    end)
-
-    if player.Character then
-        updateDisplayNameGui(player)
-    end
-end
-
-game.Players.PlayerAdded:Connect(onPlayerAdded)
-
-for _, player in ipairs(game.Players:GetPlayers()) do
-    onPlayerAdded(player)
-end
-
--- Добавляем секцию и переключатель
-local Section = AimTab:AddSection({
-    Name = "ESP налаштування"
-})
-
-AimTab:AddToggle({
-    Name = "Показать нікнейм",
-    Default = false,
-    Callback = function(state)
-        DisplayNameEnabled = state
-        updateAllDisplayNames()
-    end
-})
 
 local Section = AimTab:AddSection({
     Name = "Бокс"
@@ -3087,8 +2986,6 @@ EmoteTab:AddButton({
     Default = false,
     Callback = function()
         if scriptExecuted then
-            -- Если скрипт уже был запущен, выходим из функции
-            print("Скрипт вже запущено і не може бути запущено повторно!")
             return
         end
 

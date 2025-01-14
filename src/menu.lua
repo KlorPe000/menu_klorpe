@@ -1058,7 +1058,7 @@ UniversalSection:AddToggle({
 UniversalSection:AddToggle({
     Name = "Перевірка стін",
     Default = getgenv().ExunysDeveloperAimbot.Settings.WallCheck,
-    Default = false,
+    Default = false, 
     Callback = function(Value)
         -- Проверяем, включен ли Aimbot
         if isAimbotEnabled then

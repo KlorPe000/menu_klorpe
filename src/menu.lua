@@ -1809,6 +1809,162 @@ AimTab:AddSlider({
     end
 })
 
+local Section = AimTab:AddSection({
+    Name = "ESP налаштування"
+})
+
+-- Флаги для управления ESP
+local NameDisplayEnabled = false
+local DistanceDisplayEnabled = false
+
+-- Переключатель для отображения имён
+AimTab:AddToggle({
+    Name = "Отображать имена",
+    Default = false,
+    Callback = function(value)
+        NameDisplayEnabled = value
+        if not value then
+            for _, player in ipairs(game.Players:GetPlayers()) do
+                if player.Character then
+                    local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
+                    if rootPart then
+                        local existingGui = rootPart:FindFirstChild("NameGui")
+                        if existingGui then
+                            existingGui:Destroy()
+                        end
+                    end
+                end
+            end
+        end
+    end
+})
+
+-- Переключатель для отображения расстояний
+AimTab:AddToggle({
+    Name = "Отображать расстояние",
+    Default = false,
+    Callback = function(value)
+        DistanceDisplayEnabled = value
+        if not value then
+            for _, player in ipairs(game.Players:GetPlayers()) do
+                if player.Character then
+                    local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
+                    if rootPart then
+                        local existingGui = rootPart:FindFirstChild("DistanceGui")
+                        if existingGui then
+                            existingGui:Destroy()
+                        end
+                    end
+                end
+            end
+        end
+    end
+})
+
+-- Функция для отображения имени
+local LocalPlayer = game.Players.LocalPlayer
+
+-- Обновление имени игрока
+local function updateNameGui(player)
+    if player == LocalPlayer then return end
+    local character = player.Character or player.CharacterAdded:Wait()
+    local rootPart = character:WaitForChild("HumanoidRootPart", 5)
+    if not rootPart then return end
+    local existingGui = rootPart:FindFirstChild("NameGui")
+    if NameDisplayEnabled then
+        if not existingGui then
+            local billboardGui = Instance.new("BillboardGui", rootPart)
+            billboardGui.Name = "NameGui"
+            billboardGui.Adornee = rootPart
+            billboardGui.Size = UDim2.new(4, 0, 1, 0)
+            billboardGui.StudsOffset = Vector3.new(0, 3.5, 0)
+            billboardGui.AlwaysOnTop = true
+
+            local textLabel = Instance.new("TextLabel", billboardGui)
+            textLabel.Size = UDim2.new(1, 0, 1, 0)
+            textLabel.BackgroundTransparency = 1
+            textLabel.TextColor3 = Color3.new(1, 1, 1)
+            textLabel.TextStrokeTransparency = 0.5
+            textLabel.Font = Enum.Font.GothamBold
+            textLabel.TextScaled = true
+            textLabel.Text = player.Name
+        end
+    elseif existingGui then
+        existingGui:Destroy()
+    end
+end
+
+-- Обновление всех имён
+local function updateAllNames()
+    for _, player in ipairs(game.Players:GetPlayers()) do
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            updateNameGui(player)
+        end
+    end
+end
+
+-- Обновление расстояний
+local function updateDistanceGui(player)
+    if player == LocalPlayer then return end
+    local character = player.Character or player.CharacterAdded:Wait()
+    local rootPart = character:WaitForChild("HumanoidRootPart", 5)
+    if not rootPart then return end
+    local existingGui = rootPart:FindFirstChild("DistanceGui")
+    if DistanceDisplayEnabled then
+        if not existingGui then
+            local billboardGui = Instance.new("BillboardGui", rootPart)
+            billboardGui.Name = "DistanceGui"
+            billboardGui.Adornee = rootPart
+            billboardGui.Size = UDim2.new(4, 0, 1, 0)
+            billboardGui.StudsOffset = Vector3.new(0, -4, 0)
+            billboardGui.AlwaysOnTop = true
+
+            local textLabel = Instance.new("TextLabel", billboardGui)
+            textLabel.Size = UDim2.new(1, 0, 1, 0)
+            textLabel.BackgroundTransparency = 1
+            textLabel.TextColor3 = Color3.new(1, 1, 1)
+            textLabel.TextStrokeTransparency = 0.5
+            textLabel.Font = Enum.Font.GothamBold
+            textLabel.TextScaled = true
+        end
+
+        local billboardGui = rootPart:FindFirstChild("DistanceGui")
+        local textLabel = billboardGui:FindFirstChildOfClass("TextLabel")
+        if textLabel then
+            local distance = (LocalPlayer.Character.HumanoidRootPart.Position - rootPart.Position).Magnitude
+            textLabel.Text = string.format("%.1f", distance)
+        end
+    elseif existingGui then
+        existingGui:Destroy()
+    end
+end
+
+-- Обновление всех расстояний
+local function updateAllDistances()
+    for _, player in ipairs(game.Players:GetPlayers()) do
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            updateDistanceGui(player)
+        end
+    end
+end
+
+-- Подключение событий
+game.Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        updateNameGui(player)
+        updateDistanceGui(player)
+    end)
+end)
+
+game:GetService("RunService").RenderStepped:Connect(function()
+    if NameDisplayEnabled then
+        updateAllNames()
+    end
+    if DistanceDisplayEnabled then
+        updateAllDistances()
+    end
+end)
+
 local DisplayNameEnabled = false
 
 -- Имя игрока, который не должен отображаться

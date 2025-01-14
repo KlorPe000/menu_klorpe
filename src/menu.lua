@@ -1513,161 +1513,174 @@ local AimTab = Window:MakeTab({
     PremiumOnly = false
 })
 
-local ESPEnabled = true
-local TracersEnabled = true
-local UseTeamColor = true
+local ESPEnabled = false
+local TracersEnabled = false
+local UseTeamColor = false
 local UseTeamColorForTracers = false
-local OnlyEnemyForBox = false
-local OnlyEnemyForTracer = false
+local OnlyEnemyForBox = false -- Для бокса
+local OnlyEnemyForTracer = false -- Для трейсеров
 
-local ESPObjects = {}
+local updateInterval = 0.03  -- Увеличиваем интервал обновлений
+local lastUpdateTime = 0
 
--- Функция для получения цвета команды
-local function getTeamColor(player)
-    if UseTeamColor and player.Team then
-        return player.Team.TeamColor.Color
-    else
-        return Color3.fromRGB(255, 255, 255)
-    end
-end
-
-local function getTracerColor(player)
-    if UseTeamColorForTracers and player.Team then
-        return player.Team.TeamColor.Color
-    else
-        return Color3.fromRGB(255, 255, 255)
-    end
-end
-
--- Создание ESP для игрока
-local function createESP(player)
-    local esp = {
-        Box = Drawing.new("Quad"),
-        Tracer = Drawing.new("Line")
-    }
-
-    -- Настройки для бокса
-    esp.Box.Visible = false
-    esp.Box.Thickness = 1
-    esp.Box.Transparency = 1
-    esp.Box.Color = Color3.fromRGB(255, 255, 255)
-
-    -- Настройки для трейсера
-    esp.Tracer.Visible = false
-    esp.Tracer.Thickness = 1
-    esp.Tracer.Transparency = 1
-    esp.Tracer.Color = Color3.fromRGB(255, 255, 255)
-
-    ESPObjects[player] = esp
-end
-
--- Обновление ESP для игрока
-local function updateESP(player)
-    local camera = workspace.CurrentCamera
-    local localPlayer = game.Players.LocalPlayer
-    local esp = ESPObjects[player]
-
-    if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") or player == localPlayer then
-        -- Скрываем ESP, если персонаж недоступен или это локальный игрок
-        if esp then
-            esp.Box.Visible = false
-            esp.Tracer.Visible = false
-        end
-        return
-    end
-
-    local rootPart = player.Character.HumanoidRootPart
-    local screenPos, onScreen = camera:WorldToViewportPoint(rootPart.Position)
-
-    if onScreen then
-        -- Размеры бокса
-        local scale = player.Character.Head.Size.Y / 2
-        local size = Vector3.new(2, 3, 0) * (scale * 2)
-
-        -- Позиции вершин бокса
-        local topLeft = camera:WorldToViewportPoint((rootPart.CFrame * CFrame.new(size.X, size.Y, 0)).p)
-        local topRight = camera:WorldToViewportPoint((rootPart.CFrame * CFrame.new(-size.X, size.Y, 0)).p)
-        local bottomLeft = camera:WorldToViewportPoint((rootPart.CFrame * CFrame.new(size.X, -size.Y, 0)).p)
-        local bottomRight = camera:WorldToViewportPoint((rootPart.CFrame * CFrame.new(-size.X, -size.Y, 0)).p)
-
-        -- Устанавливаем вершины бокса
-        esp.Box.PointA = Vector2.new(topLeft.X, topLeft.Y)
-        esp.Box.PointB = Vector2.new(topRight.X, topRight.Y)
-        esp.Box.PointC = Vector2.new(bottomRight.X, bottomRight.Y)
-        esp.Box.PointD = Vector2.new(bottomLeft.X, bottomLeft.Y)
-
-        -- Устанавливаем трейсер
-        esp.Tracer.From = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y)
-        esp.Tracer.To = Vector2.new(screenPos.X, screenPos.Y)
-
-        -- Видимость
-        local isEnemy = player.Team ~= localPlayer.Team
-        esp.Box.Visible = ESPEnabled and (not OnlyEnemyForBox or isEnemy)
-        esp.Tracer.Visible = TracersEnabled and (not OnlyEnemyForTracer or isEnemy)
-
-        -- Цвета
-        local boxColor = getTeamColor(player)
-        esp.Box.Color = boxColor
-
-        local tracerColor = getTracerColor(player)
-        esp.Tracer.Color = tracerColor
-    else
-        -- Скрываем, если игрок вне экрана
-        esp.Box.Visible = false
-        esp.Tracer.Visible = false
-        -- Сбрасываем вершины бокса
-        esp.Box.PointA = Vector2.new()
-        esp.Box.PointB = Vector2.new()
-        esp.Box.PointC = Vector2.new()
-        esp.Box.PointD = Vector2.new()
-    end
-end
-
--- Полная очистка ESP
-local function clearAllESP()
-    for player, objects in pairs(ESPObjects) do
-        for _, obj in pairs(objects) do
-            obj:Remove()
-        end
-        ESPObjects[player] = nil
-    end
-end
-
--- Активация ESP
 local function activateESP()
-    for _, player in pairs(game.Players:GetPlayers()) do
-        if not ESPObjects[player] then
-            createESP(player)
+    local plr = game.Players.LocalPlayer
+    local camera = game.Workspace.CurrentCamera
+
+    function getTeamColor(player)
+        if UseTeamColor and player.Team then
+            return player.Team.TeamColor.Color
+        else
+            return Color3.fromRGB(255, 255, 255)
         end
     end
 
-    game:GetService("RunService").Heartbeat:Connect(function()
-        if not ESPEnabled and not TracersEnabled then
-            clearAllESP()
-            return
+    function getTracerColor(player)
+        if UseTeamColorForTracers and player.Team then
+            return player.Team.TeamColor.Color
+        else
+            return Color3.fromRGB(255, 255, 255)
+        end
+    end
+
+    local function initializeESP(player)
+        local Top = Drawing.new("Line")
+        Top.Visible = false
+        Top.Color = getTeamColor(player)
+        Top.Thickness = 2
+        Top.Transparency = 1
+
+        local Bottom = Drawing.new("Line")
+        Bottom.Visible = false
+        Bottom.Color = getTeamColor(player)
+        Bottom.Thickness = 2
+        Bottom.Transparency = 1
+
+        local Left = Drawing.new("Line")
+        Left.Visible = false
+        Left.Color = getTeamColor(player)
+        Left.Thickness = 2
+        Left.Transparency = 1
+
+        local Right = Drawing.new("Line")
+        Right.Visible = false
+        Right.Color = getTeamColor(player)
+        Right.Thickness = 2
+        Right.Transparency = 1
+
+        local Tracer = Drawing.new("Line")
+        Tracer.Visible = false
+        Tracer.Color = getTracerColor(player)
+        Tracer.Thickness = 2
+        Tracer.Transparency = 1
+
+        local function updateESP()
+            local connection
+            connection = game:GetService("RunService").Heartbeat:Connect(function(deltaTime)
+                lastUpdateTime = lastUpdateTime + deltaTime
+                if lastUpdateTime < updateInterval then
+                    return
+                end
+                lastUpdateTime = 0
+
+                -- Прерываем, если не включены боксы или трейсеров
+                if not ESPEnabled and not TracersEnabled then
+                    Top.Visible = false
+                    Left.Visible = false
+                    Bottom.Visible = false
+                    Right.Visible = false
+                    Tracer.Visible = false
+                    connection:Disconnect()
+                    return
+                end
+
+                -- Проверяем, что игрок на экране и его персонаж жив
+                if player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Name ~= plr.Name and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
+                    local ScreenPos, OnScreen = camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
+
+                    -- Логика для бокса (только противник)
+                    if OnlyEnemyForBox and player.Team == plr.Team then
+                        Top.Visible = false
+                        Left.Visible = false
+                        Bottom.Visible = false
+                        Right.Visible = false
+                    else
+                        Top.Visible = ESPEnabled
+                        Left.Visible = ESPEnabled
+                        Bottom.Visible = ESPEnabled
+                        Right.Visible = ESPEnabled
+                    end
+
+                    -- Логика для трейсеров (только противник)
+                    if OnlyEnemyForTracer and player.Team == plr.Team then
+                        Tracer.Visible = false
+                    else
+                        Tracer.Visible = TracersEnabled
+                    end
+
+                    local teamColor = getTeamColor(player)
+                    local tracerColor = getTracerColor(player)
+                    Top.Color = teamColor
+                    Bottom.Color = teamColor
+                    Left.Color = teamColor
+                    Right.Color = teamColor
+                    Tracer.Color = tracerColor
+
+                    if OnScreen then
+                        local Scale = player.Character.Head.Size.Y / 2
+                        local Size = Vector3.new(2, 3, 0) * (Scale * 2)
+                        local TL = camera:WorldToViewportPoint((player.Character.HumanoidRootPart.CFrame * CFrame.new(Size.X, Size.Y, 0)).p)
+                        local TR = camera:WorldToViewportPoint((player.Character.HumanoidRootPart.CFrame * CFrame.new(-Size.X, Size.Y, 0)).p)
+                        local BL = camera:WorldToViewportPoint((player.Character.HumanoidRootPart.CFrame * CFrame.new(Size.X, -Size.Y, 0)).p)
+                        local BR = camera:WorldToViewportPoint((player.Character.HumanoidRootPart.CFrame * CFrame.new(-Size.X, -Size.Y, 0)).p)
+
+                        Top.From = Vector2.new(TL.X, TL.Y)
+                        Top.To = Vector2.new(TR.X, TR.Y)
+                        Left.From = Vector2.new(TL.X, TL.Y)
+                        Left.To = Vector2.new(BL.X, BL.Y)
+                        Right.From = Vector2.new(TR.X, TR.Y)
+                        Right.To = Vector2.new(BR.X, BR.Y)
+                        Bottom.From = Vector2.new(BL.X, BL.Y)
+                        Bottom.To = Vector2.new(BR.X, BR.Y)
+
+                        if TracersEnabled then
+                            Tracer.From = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y)
+                            Tracer.To = Vector2.new(ScreenPos.X, ScreenPos.Y)
+                        end
+                    else
+                        Top.Visible = false
+                        Left.Visible = false
+                        Bottom.Visible = false
+                        Right.Visible = false
+                        Tracer.Visible = false
+                    end
+                else
+                    Top.Visible = false
+                    Left.Visible = false
+                    Bottom.Visible = false
+                    Right.Visible = false
+                    Tracer.Visible = false
+                    if not game.Players:FindFirstChild(player.Name) then
+                        connection:Disconnect()
+                    end
+                end
+            end)
         end
 
-        for player, _ in pairs(ESPObjects) do
-            updateESP(player)
-        end
+        coroutine.wrap(updateESP)()
+    end
+
+    -- Инициализация ESP для всех игроков
+    for _, player in pairs(game.Players:GetPlayers()) do
+        initializeESP(player)
+    end
+
+    game.Players.PlayerAdded:Connect(function(newPlayer)
+        newPlayer.CharacterAdded:Connect(function()
+            initializeESP(newPlayer)
+        end)
     end)
 end
-
--- Слушатели событий для игроков
-game.Players.PlayerAdded:Connect(function(player)
-    player.CharacterAdded:Connect(function()
-        createESP(player)
-    end)
-end)
-
-game.Players.PlayerRemoving:Connect(function(player)
-    if ESPObjects[player] then
-        for _, obj in pairs(ESPObjects[player]) do
-            obj:Remove()
-        end
-        ESPObjects[player] = nil
-    end
-end)
 
 local Players = game:GetService("Players")
 local localPlayer = Players.LocalPlayer

@@ -12,7 +12,7 @@ local PlayerTab = Window:MakeTab({
     Icon = "rbxassetid://17404114716",
     PremiumOnly = false
 })
-
+ 
 -- Переменные
 local walkSpeed = 16
 local jumpHeight = 7

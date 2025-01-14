@@ -1033,6 +1033,7 @@ getgenv().ExunysDeveloperAimbot.Settings = getgenv().ExunysDeveloperAimbot.Setti
 UniversalSection:AddToggle({
     Name = "Перевірка на живого",
     Default = getgenv().ExunysDeveloperAimbot.Settings.AliveCheck,
+    Default = true,
     Callback = function(Value)
         -- Проверяем, включен ли Aimbot
         if isAimbotEnabled then
@@ -1045,6 +1046,7 @@ UniversalSection:AddToggle({
 UniversalSection:AddToggle({
     Name = "Перевірка команди",
     Default = getgenv().ExunysDeveloperAimbot.Settings.TeamCheck,
+    Default = false,
     Callback = function(Value)
         -- Проверяем, включен ли Aimbot
         if isAimbotEnabled then
@@ -1056,6 +1058,7 @@ UniversalSection:AddToggle({
 UniversalSection:AddToggle({
     Name = "Перевірка стін",
     Default = getgenv().ExunysDeveloperAimbot.Settings.WallCheck,
+    Default = false,
     Callback = function(Value)
         -- Проверяем, включен ли Aimbot
         if isAimbotEnabled then

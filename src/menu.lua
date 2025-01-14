@@ -1795,7 +1795,7 @@ AimTab:AddSlider({
 })
 
 local Section = AimTab:AddSection({
-    Name = "ESP настройки"
+    Name = "ESP налаштування"
 })
 
 -- Флаги для управления ESP
@@ -1804,7 +1804,7 @@ local DistanceDisplayEnabled = false
 
 -- Переключатель для отображения имён
 AimTab:AddToggle({
-    Name = "Отображать имена",
+    Name = "Відобразити імена",
     Default = false,
     Callback = function(value)
         NameDisplayEnabled = value
@@ -1826,7 +1826,7 @@ AimTab:AddToggle({
 
 -- Переключатель для отображения расстояний
 AimTab:AddToggle({
-    Name = "Отображать расстояние",
+    Name = "Відображати відстань",
     Default = false,
     Callback = function(value)
         DistanceDisplayEnabled = value

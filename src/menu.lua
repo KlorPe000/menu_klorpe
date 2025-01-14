@@ -1516,6 +1516,7 @@ local AimTab = Window:MakeTab({
 local ESPEnabled = true
 local TracersEnabled = true
 local UseTeamColor = true
+local UseTeamColorForTracers = false
 local OnlyEnemyForBox = false
 local OnlyEnemyForTracer = false
 
@@ -1524,6 +1525,14 @@ local ESPObjects = {}
 -- Функция для получения цвета команды
 local function getTeamColor(player)
     if UseTeamColor and player.Team then
+        return player.Team.TeamColor.Color
+    else
+        return Color3.fromRGB(255, 255, 255)
+    end
+end
+
+local function getTracerColor(player)
+    if UseTeamColorForTracers and player.Team then
         return player.Team.TeamColor.Color
     else
         return Color3.fromRGB(255, 255, 255)
@@ -1599,7 +1608,9 @@ local function updateESP(player)
         -- Цвета
         local boxColor = getTeamColor(player)
         esp.Box.Color = boxColor
-        esp.Tracer.Color = boxColor
+
+        local tracerColor = getTracerColor(player)
+        esp.Tracer.Color = tracerColor
     else
         -- Скрываем, если игрок вне экрана
         esp.Box.Visible = false
@@ -1947,7 +1958,7 @@ AimTab:AddToggle({
 })
 
 AimTab:AddToggle({
-    Name = "Только противник (Бокс)",
+    Name = "Тільки противники (Якщо є)",
     Default = false,
     Callback = function(state)
         OnlyEnemyForBox = state
@@ -1978,7 +1989,7 @@ AimTab:AddToggle({
 })
 
 AimTab:AddToggle({
-    Name = "Только противник (Трейсери)",
+    Name = "Тільки противники (Якщо є)",
     Default = false,
     Callback = function(state)
         OnlyEnemyForTracer = state

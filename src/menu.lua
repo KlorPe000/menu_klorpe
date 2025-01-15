@@ -2030,7 +2030,7 @@ AimTab:AddToggle({
 })
 
 AimTab:AddToggle({
-    Name = "Колір команди (Якщо є) (Тимчасово баги)",
+    Name = "Колір команди (Якщо є)",
     Default = false,
     Callback = function(state)
         UseTeamColorForHighlight = state

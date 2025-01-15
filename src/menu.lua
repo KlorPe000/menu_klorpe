@@ -1684,15 +1684,12 @@ end
 
 local Players = game:GetService("Players")
 local localPlayer = Players.LocalPlayer
-local localCharacter = localPlayer.Character or localPlayer.CharacterAdded:Wait()
-local localRootPart = localCharacter:WaitForChild("HumanoidRootPart")
 
 local HighlightEnabled = false -- Начальное состояние Highlight (выключено)
 local UseTeamColorForHighlight = true -- Использовать ли командные цвета для Highlight
 local ShowOnlyEnemies = false -- Переключатель "Только противники"
 local UpdateInterval = 2 -- Интервал в секундах для регулярной проверки
 
--- Очистка всех Highlight
 local function clearAllHighlights()
     for _, player in pairs(Players:GetPlayers()) do
         if player.Character then
@@ -1705,13 +1702,17 @@ local function clearAllHighlights()
     end
 end
 
--- Создание Highlight
 local function createHighlight(player, character)
     -- Удаляем старый Highlight
     for _, highlight in pairs(character:GetChildren()) do
         if highlight:IsA("Highlight") then
             highlight:Destroy()
         end
+    end
+
+    -- Проверяем, является ли игрок врагом
+    if ShowOnlyEnemies and player.Team == localPlayer.Team then
+        return
     end
 
     -- Создаём новый Highlight
@@ -1733,58 +1734,60 @@ local function createHighlight(player, character)
     highlight.Parent = character
 end
 
--- Поиск игроков, упорядоченных по расстоянию
-local function getPlayersSortedByDistance()
-    local sortedPlayers = {}
-
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= localPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            if ShowOnlyEnemies and player.Team == localPlayer.Team then
-                continue
-            end
-
-            local targetRootPart = player.Character.HumanoidRootPart
-            local distance = (targetRootPart.Position - localRootPart.Position).Magnitude
-
-            table.insert(sortedPlayers, {Player = player, Distance = distance})
-        end
+local function getDistance(player)
+    if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
+        return math.huge
     end
 
-    -- Сортировка по расстоянию
-    table.sort(sortedPlayers, function(a, b)
-        return a.Distance < b.Distance
-    end)
+    local localRoot = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")
+    local targetRoot = player.Character:FindFirstChild("HumanoidRootPart")
 
-    return sortedPlayers
+    if localRoot and targetRoot then
+        return (localRoot.Position - targetRoot.Position).Magnitude
+    end
+
+    return math.huge
 end
 
--- Обновление Highlight
-local function applyDynamicHighlight()
+local function applyHighlight()
     if not HighlightEnabled then return end
 
-    clearAllHighlights() -- Сначала очищаем все Highlight
+    local players = Players:GetPlayers()
+    table.sort(players, function(a, b)
+        return getDistance(a) < getDistance(b)
+    end)
 
-    local playersSorted = getPlayersSortedByDistance()
-    for _, data in ipairs(playersSorted) do
-        local player = data.Player
-        if player.Character then
+    for _, player in pairs(players) do
+        if player ~= localPlayer and player.Character then
             createHighlight(player, player.Character)
         end
     end
 end
 
--- Постоянный мониторинг
 local function monitorCharacters()
     while HighlightEnabled do
-        applyDynamicHighlight()
+        applyHighlight()
         wait(UpdateInterval)
     end
 end
 
--- Включение Highlight
+-- Обработчик для нового игрока или респауна
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function(character)
+        if HighlightEnabled then
+            createHighlight(player, character)
+        end
+    end)
+end)
+
+-- Включение Highlight для всех игроков
 local function activateHighlight()
     HighlightEnabled = true
     clearAllHighlights()
+
+    applyHighlight()
+
+    -- Запускаем постоянный мониторинг
     task.spawn(monitorCharacters)
 end
 

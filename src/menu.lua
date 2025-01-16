@@ -1610,10 +1610,10 @@ local ESPEnabled = false
 local TracersEnabled = false
 local UseTeamColor = false
 local UseTeamColorForTracers = false
-local OnlyEnemyForBox = false -- Для бокса
-local OnlyEnemyForTracer = false -- Для трейсеров
+local OnlyEnemyForBox = false 
+local OnlyEnemyForTracer = false
 
-local updateInterval = 0.03  -- Увеличиваем интервал обновлений
+local updateInterval = 0.001
 local lastUpdateTime = 0
 
 local function activateESP()
@@ -1676,7 +1676,6 @@ local function activateESP()
                 end
                 lastUpdateTime = 0
 
-                -- Прерываем, если не включены боксы или трейсеров
                 if not ESPEnabled and not TracersEnabled then
                     Top.Visible = false
                     Left.Visible = false
@@ -1719,6 +1718,7 @@ local function activateESP()
                     Right.Color = teamColor
                     Tracer.Color = tracerColor
 
+                    local ScreenPos, OnScreen = camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
                     if OnScreen then
                         local Scale = player.Character.Head.Size.Y / 2
                         local Size = Vector3.new(2, 3, 0) * (Scale * 2)
@@ -1739,7 +1739,15 @@ local function activateESP()
                         if TracersEnabled then
                             Tracer.From = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y)
                             Tracer.To = Vector2.new(ScreenPos.X, ScreenPos.Y)
+                            Tracer.Visible = true
+                        else
+                            Tracer.Visible = false
                         end
+
+                        Top.Visible = ESPEnabled
+                        Left.Visible = ESPEnabled
+                        Bottom.Visible = ESPEnabled
+                        Right.Visible = ESPEnabled
                     else
                         Top.Visible = false
                         Left.Visible = false
@@ -1763,7 +1771,6 @@ local function activateESP()
         coroutine.wrap(updateESP)()
     end
 
-    -- Инициализация ESP для всех игроков
     for _, player in pairs(game.Players:GetPlayers()) do
         initializeESP(player)
     end
@@ -1780,9 +1787,10 @@ local localPlayer = Players.LocalPlayer
 
 local HighlightEnabled = false -- Начальное состояние Highlight (выключено)
 local UseTeamColorForHighlight = true -- Использовать ли командные цвета для Highlight
-local ShowOnlyEnemies = false -- Переключатель "Только противники"
+local ShowOnlyEnemies = false -- Переключатель "Тільки противники"
 local UpdateInterval = 2 -- Интервал в секундах для регулярной проверки
 
+-- Очистка всех Highlight
 local function clearAllHighlights()
     for _, player in pairs(Players:GetPlayers()) do
         if player.Character then
@@ -1795,17 +1803,13 @@ local function clearAllHighlights()
     end
 end
 
+-- Создание Highlight
 local function createHighlight(player, character)
     -- Удаляем старый Highlight
     for _, highlight in pairs(character:GetChildren()) do
         if highlight:IsA("Highlight") then
             highlight:Destroy()
         end
-    end
-
-    -- Проверяем, является ли игрок врагом
-    if ShowOnlyEnemies and player.Team == localPlayer.Team then
-        return
     end
 
     -- Создаём новый Highlight
@@ -1827,60 +1831,64 @@ local function createHighlight(player, character)
     highlight.Parent = character
 end
 
-local function getDistance(player)
-    if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
-        return math.huge
+-- Фильтрация игроков по командам
+local function filterPlayersByTeam()
+    local filteredPlayers = {}
+
+    for _, player in pairs(Players:GetPlayers()) do
+        if ShowOnlyEnemies then
+            -- Показываем только противников
+            if player.Team ~= localPlayer.Team then
+                table.insert(filteredPlayers, player)
+            end
+        else
+            -- Показываем всех
+            table.insert(filteredPlayers, player)
+        end
     end
 
-    local localRoot = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")
-    local targetRoot = player.Character:FindFirstChild("HumanoidRootPart")
-
-    if localRoot and targetRoot then
-        return (localRoot.Position - targetRoot.Position).Magnitude
-    end
-
-    return math.huge
+    return filteredPlayers
 end
 
-local function applyHighlight()
+-- Функция для расчета расстояния
+local function calculateDistance(player)
+    if player.Character and player.Character.PrimaryPart then
+        return (player.Character.PrimaryPart.Position - localPlayer.Character.PrimaryPart.Position).Magnitude
+    end
+    return math.huge -- если нет персонажа, возвращаем большое значение
+end
+
+-- Обновление Highlight
+local function applyDynamicHighlight()
     if not HighlightEnabled then return end
 
-    local players = Players:GetPlayers()
+    local players = filterPlayersByTeam()
+
+    -- Сортируем игроков по расстоянию
     table.sort(players, function(a, b)
-        return getDistance(a) < getDistance(b)
+        return calculateDistance(a) < calculateDistance(b)
     end)
 
+    -- Применяем Highlight игрокам
     for _, player in pairs(players) do
-        if player ~= localPlayer and player.Character then
+        if player.Character then
             createHighlight(player, player.Character)
         end
     end
 end
 
+-- Постоянный мониторинг персонажей
 local function monitorCharacters()
     while HighlightEnabled do
-        applyHighlight()
+        applyDynamicHighlight()
         wait(UpdateInterval)
     end
 end
 
--- Обработчик для нового игрока или респауна
-Players.PlayerAdded:Connect(function(player)
-    player.CharacterAdded:Connect(function(character)
-        if HighlightEnabled then
-            createHighlight(player, character)
-        end
-    end)
-end)
-
--- Включение Highlight для всех игроков
+-- Включение Highlight
 local function activateHighlight()
     HighlightEnabled = true
     clearAllHighlights()
-
-    applyHighlight()
-
-    -- Запускаем постоянный мониторинг
     task.spawn(monitorCharacters)
 end
 
@@ -1889,6 +1897,7 @@ local function deactivateHighlight()
     HighlightEnabled = false
     clearAllHighlights()
 end
+
 
 local Section = AimTab:AddSection({
     Name = "ESP налаштування"

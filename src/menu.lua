@@ -1610,8 +1610,8 @@ local ESPEnabled = false
 local TracersEnabled = false
 local UseTeamColor = false
 local UseTeamColorForTracers = false
-local OnlyEnemyForBox = false 
-local OnlyEnemyForTracer = false
+local OnlyEnemiesForBoxes = false
+local OnlyEnemiesForTracers = false
 
 local updateInterval = 0.001
 local lastUpdateTime = 0
@@ -1686,28 +1686,15 @@ local function activateESP()
                     return
                 end
 
-                -- Проверяем, что игрок на экране и его персонаж жив
                 if player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Name ~= plr.Name and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
-                    local ScreenPos, OnScreen = camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
-
-                    -- Логика для бокса (только противник)
-                    if OnlyEnemyForBox and player.Team == plr.Team then
+                    local isEnemy = not player.Team or player.Team ~= plr.Team
+                    if (OnlyEnemiesForBoxes and not isEnemy) and (OnlyEnemiesForTracers and not isEnemy) then
                         Top.Visible = false
                         Left.Visible = false
                         Bottom.Visible = false
                         Right.Visible = false
-                    else
-                        Top.Visible = ESPEnabled
-                        Left.Visible = ESPEnabled
-                        Bottom.Visible = ESPEnabled
-                        Right.Visible = ESPEnabled
-                    end
-
-                    -- Логика для трейсеров (только противник)
-                    if OnlyEnemyForTracer and player.Team == plr.Team then
                         Tracer.Visible = false
-                    else
-                        Tracer.Visible = TracersEnabled
+                        return
                     end
 
                     local teamColor = getTeamColor(player)
@@ -1736,7 +1723,7 @@ local function activateESP()
                         Bottom.From = Vector2.new(BL.X, BL.Y)
                         Bottom.To = Vector2.new(BR.X, BR.Y)
 
-                        if TracersEnabled then
+                        if TracersEnabled and (not OnlyEnemiesForTracers or isEnemy) then
                             Tracer.From = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y)
                             Tracer.To = Vector2.new(ScreenPos.X, ScreenPos.Y)
                             Tracer.Visible = true
@@ -1744,10 +1731,10 @@ local function activateESP()
                             Tracer.Visible = false
                         end
 
-                        Top.Visible = ESPEnabled
-                        Left.Visible = ESPEnabled
-                        Bottom.Visible = ESPEnabled
-                        Right.Visible = ESPEnabled
+                        Top.Visible = ESPEnabled and (not OnlyEnemiesForBoxes or isEnemy)
+                        Left.Visible = ESPEnabled and (not OnlyEnemiesForBoxes or isEnemy)
+                        Bottom.Visible = ESPEnabled and (not OnlyEnemiesForBoxes or isEnemy)
+                        Right.Visible = ESPEnabled and (not OnlyEnemiesForBoxes or isEnemy)
                     else
                         Top.Visible = false
                         Left.Visible = false
@@ -1805,6 +1792,11 @@ end
 
 -- Создание Highlight
 local function createHighlight(player, character)
+    -- Пропускаем создание Highlight для самого себя
+    if player == localPlayer then
+        return
+    end
+
     -- Удаляем старый Highlight
     for _, highlight in pairs(character:GetChildren()) do
         if highlight:IsA("Highlight") then
@@ -1897,7 +1889,6 @@ local function deactivateHighlight()
     HighlightEnabled = false
     clearAllHighlights()
 end
-
 
 local Section = AimTab:AddSection({
     Name = "ESP налаштування"
@@ -2076,10 +2067,10 @@ AimTab:AddToggle({
 })
 
 AimTab:AddToggle({
-    Name = "Тільки противники (Якщо є)",
+    Name = "Тільки противники",
     Default = false,
     Callback = function(state)
-        OnlyEnemyForBox = state
+        OnlyEnemiesForBoxes = state
     end
 })
 
@@ -2107,10 +2098,10 @@ AimTab:AddToggle({
 })
 
 AimTab:AddToggle({
-    Name = "Тільки противники (Якщо є)",
+    Name = "Тільки противники",
     Default = false,
     Callback = function(state)
-        OnlyEnemyForTracer = state
+        OnlyEnemiesForTracers = state
     end
 })
 

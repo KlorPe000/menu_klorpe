@@ -1247,12 +1247,23 @@ local function GetClosestPlayer()
 
         for _, Player in next, GetPlayers(Players) do
             local Character = __index(Player, "Character")
-            local Humanoid = Character and FindFirstChildOfClass(Character, "Humanoid")
+            if not Character then
+                continue -- Пропускаем, если персонажа нет
+            end
 
-            if Player ~= LocalPlayer and not tablefind(Environment.Blacklisted, __index(Player, "Name")) and Character and Humanoid then
+            local Humanoid = FindFirstChildOfClass(Character, "Humanoid")
+            if not Humanoid then
+                continue -- Пропускаем, если Humanoid отсутствует
+            end
+
+            if Player ~= LocalPlayer and not tablefind(Environment.Blacklisted, __index(Player, "Name")) then
                 local Part = FindFirstChild(Character, LockPart)
+                if not Part then
+                    continue -- Пропускаем, если указанная часть тела отсутствует
+                end
 
                 local PartPosition = __index(Part, "Position")
+                -- Проверки на команду, стены и здоровье
                 if Settings.TeamCheck and __index(Player, Environment.DeveloperSettings.TeamCheckOption) == __index(LocalPlayer, Environment.DeveloperSettings.TeamCheckOption) then
                     continue
                 end
@@ -1263,11 +1274,9 @@ local function GetClosestPlayer()
 
                 if Settings.WallCheck then
                     local BlacklistTable = GetDescendants(__index(LocalPlayer, "Character"))
-
                     for _, Value in next, GetDescendants(Character) do
                         BlacklistTable[#BlacklistTable + 1] = Value
                     end
-
                     if #GetPartsObscuringTarget(Camera, {PartPosition}, BlacklistTable) > 0 then
                         continue
                     end
@@ -2106,7 +2115,7 @@ AimTab:AddToggle({
 })
 
 local Section = AimTab:AddSection({
-    Name = "Виділення"
+    Name = "Виділення (Інтервал оновлення не впливає)"
 })
 
 AimTab:AddToggle({
@@ -2123,7 +2132,7 @@ AimTab:AddToggle({
 })
 
 AimTab:AddToggle({
-    Name = "Колір команди (Якщо є)",
+    Name = "Колір команди (Якщо є) (Тимчасово баги)",
     Default = false,
     Callback = function(state)
         UseTeamColorForHighlight = state

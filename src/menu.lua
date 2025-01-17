@@ -2115,7 +2115,7 @@ AimTab:AddToggle({
 })
 
 local Section = AimTab:AddSection({
-    Name = "Виділення (Інтервал оновлення не впливає)"
+    Name = "Виділення"
 })
 
 AimTab:AddToggle({
@@ -2132,7 +2132,7 @@ AimTab:AddToggle({
 })
 
 AimTab:AddToggle({
-    Name = "Колір команди (Якщо є) (Тимчасово баги)",
+    Name = "Колір команди (Якщо є)",
     Default = false,
     Callback = function(state)
         UseTeamColorForHighlight = state

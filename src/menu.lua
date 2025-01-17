@@ -13,7 +13,7 @@ local PlayerTab = Window:MakeTab({
 })
  
 -- Переменные
-local walkSpeed = 16
+local walkSpeed = 16 
 local jumpHeight = 7
 local fieldOfView = 70
 

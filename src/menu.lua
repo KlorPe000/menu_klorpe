@@ -2076,7 +2076,6 @@ local function removeBoxAdornment(npc)
     if adornments[npc] then
         adornments[npc]:Destroy()
         adornments[npc] = nil
-        print("Удален BoxAdornment для NPC:", npc.Name)
     end
 end
 
@@ -2094,8 +2093,6 @@ local function handleNPC(descendant)
             if torso and not adornments[descendant] then
                 local adornment = createBoxAdornment(torso)
                 adornments[descendant] = adornment
-
-                print("Добавлен BoxAdornment на NPC:", descendant.Name)
 
                 descendant.AncestryChanged:Connect(function(_, parent)
                     if not parent then
@@ -2132,9 +2129,7 @@ AimTab:AddToggle({
                 adornment:Destroy()
             end
             adornments = {}
-            print("ESP отключен")
         else
-            print("ESP включен")
             applyESPToExistingNPCs()
         end
     end

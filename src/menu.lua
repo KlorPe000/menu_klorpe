@@ -1951,114 +1951,17 @@ AimTab:AddToggle({
     end
 })
 
--- Функция для отображения имени
-local LocalPlayer = game.Players.LocalPlayer
+Aim:AddSection({ Name = "Настройки для NPC" })
 
-local function updateNameGui(player)
-    if player == LocalPlayer then return end
-
-    local character = player.Character or player.CharacterAdded:Wait()
-    local rootPart = character:WaitForChild("HumanoidRootPart", 5)
-    if not rootPart then return end
-
-    local existingGui = rootPart:FindFirstChild("NameGui")
-    if NameDisplayEnabled then
-        if not existingGui then
-            local billboardGui = Instance.new("BillboardGui", rootPart)
-            billboardGui.Name = "NameGui"
-            billboardGui.Adornee = rootPart
-            billboardGui.Size = UDim2.new(4, 0, 1, 0)
-            billboardGui.StudsOffset = Vector3.new(0, 3.5, 0)
-            billboardGui.AlwaysOnTop = true
-
-            local textLabel = Instance.new("TextLabel", billboardGui)
-            textLabel.Size = UDim2.new(1, 0, 1, 0)
-            textLabel.BackgroundTransparency = 1
-            textLabel.TextColor3 = Color3.new(1, 1, 1)
-            textLabel.TextStrokeTransparency = 0.5
-            textLabel.Font = Enum.Font.GothamBold
-            textLabel.TextScaled = true
-            textLabel.Text = player.Name
-        end
-    elseif existingGui then
-        existingGui:Destroy()
-    end
-end
-
-local function updateDistanceGui(player)
-    if player == LocalPlayer then return end
-
-    local character = player.Character or player.CharacterAdded:Wait()
-    local rootPart = character:WaitForChild("HumanoidRootPart", 5)
-    if not rootPart then return end
-
-    local existingGui = rootPart:FindFirstChild("DistanceGui")
-    if DistanceDisplayEnabled then
-        if not existingGui then
-            local billboardGui = Instance.new("BillboardGui", rootPart)
-            billboardGui.Name = "DistanceGui"
-            billboardGui.Adornee = rootPart
-            billboardGui.Size = UDim2.new(4, 0, 1, 0)
-            billboardGui.StudsOffset = Vector3.new(0, -4, 0)
-            billboardGui.AlwaysOnTop = true
-
-            local textLabel = Instance.new("TextLabel", billboardGui)
-            textLabel.Size = UDim2.new(1, 0, 1, 0)
-            textLabel.BackgroundTransparency = 1
-            textLabel.TextColor3 = Color3.new(1, 1, 1)
-            textLabel.TextStrokeTransparency = 0.5
-            textLabel.Font = Enum.Font.GothamBold
-            textLabel.TextScaled = true
-        end
-
-        local billboardGui = rootPart:FindFirstChild("DistanceGui")
-        local textLabel = billboardGui:FindFirstChildOfClass("TextLabel")
-        if textLabel then
-            local distance = (LocalPlayer.Character.HumanoidRootPart.Position - rootPart.Position).Magnitude
-            textLabel.Text = string.format("%.1f", distance)
-        end
-    elseif existingGui then
-        existingGui:Destroy()
-    end
-end
-
--- Обновление всех имен и расстояний
-local function updateAllNames()
-    for _, player in ipairs(game.Players:GetPlayers()) do
-        updateNameGui(player)
-    end
-end
-
-local function updateAllDistances()
-    for _, player in ipairs(game.Players:GetPlayers()) do
-        updateDistanceGui(player)
-    end
-end
-
--- Подключение событий
-game.Players.PlayerAdded:Connect(function(player)
-    player.CharacterAdded:Connect(function()
-        updateNameGui(player)
-        updateDistanceGui(player)
-    end)
-end)
-
-game:GetService("RunService").RenderStepped:Connect(function()
-    if NameDisplayEnabled then
-        updateAllNames()
-    end
-    if DistanceDisplayEnabled then
-        updateAllDistances()
-    end
-end)
-
--- Таблица для хранения BoxAdornment
-local adornments = {}
-
--- Флаг включения/отключения ESP
 local espEnabled = false
+local HealthDisplayEnabled = false
+local TracersEnabled = false
 
--- Функция создания BoxAdornment
+-- Основные таблицы
+local adornments = {}
+local tracers = {}
+
+-- ESP Box
 local function createBoxAdornment(part)
     local adornment = Instance.new("BoxHandleAdornment")
     adornment.Size = part.Size * Vector3.new(0.6, 0.6, 0.6)
@@ -2066,12 +1969,11 @@ local function createBoxAdornment(part)
     adornment.AlwaysOnTop = true
     adornment.ZIndex = 5
     adornment.Color3 = Color3.fromRGB(255, 0, 0)
-    adornment.Parent = game.Workspace
     adornment.Adornee = part
+    adornment.Parent = game.Workspace
     return adornment
 end
 
--- Удаление BoxAdornment
 local function removeBoxAdornment(npc)
     if adornments[npc] then
         adornments[npc]:Destroy()
@@ -2079,58 +1981,189 @@ local function removeBoxAdornment(npc)
     end
 end
 
--- Обработка NPC
-local function handleNPC(descendant)
-    if not espEnabled then return end -- Если выключено, не обрабатываем
+-- Health GUI
+local function updateHealthGui(npc)
+    local humanoid = npc:FindFirstChildOfClass("Humanoid")
+    local rootPart = npc:FindFirstChild("HumanoidRootPart")
+    if not humanoid or not rootPart then return end
 
-    if descendant:IsA("Model") and descendant:FindFirstChildOfClass("Humanoid") then
-        local player = game.Players:GetPlayerFromCharacter(descendant)
-        if player then return end -- Пропускаем игроков
+    local existing = rootPart:FindFirstChild("HealthGui")
 
-        local humanoid = descendant:FindFirstChildOfClass("Humanoid")
-        if humanoid and humanoid.Health > 0 then
-            local torso = descendant:FindFirstChild("Torso") or descendant:FindFirstChild("UpperTorso")
-            if torso and not adornments[descendant] then
-                local adornment = createBoxAdornment(torso)
-                adornments[descendant] = adornment
+    if HealthDisplayEnabled then
+        if not existing then
+            local bar = Instance.new("BillboardGui", rootPart)
+            bar.Name = "HealthGui"
+            bar.Adornee = rootPart
+            bar.Size = UDim2.new(4, 0, 0.5, 0)
+            bar.StudsOffset = Vector3.new(0, 5, 0)
+            bar.AlwaysOnTop = true
 
-                descendant.AncestryChanged:Connect(function(_, parent)
-                    if not parent then
-                        removeBoxAdornment(descendant)
-                    end
-                end)
+            local bg = Instance.new("Frame", bar)
+            bg.BackgroundColor3 = Color3.new(0, 0, 0)
+            bg.BorderSizePixel = 0
+            bg.Size = UDim2.new(1, 0, 1, 0)
+
+            local fg = Instance.new("Frame", bg)
+            fg.Name = "HealthBar"
+            fg.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+            fg.BorderSizePixel = 0
+            fg.Size = UDim2.new(1, 0, 1, 0)
+        end
+
+        local gui = rootPart:FindFirstChild("HealthGui")
+        if gui then
+            local bar = gui:FindFirstChild("Frame")
+            local fg = bar and bar:FindFirstChild("HealthBar")
+            if fg then
+                fg.Size = UDim2.new(humanoid.Health / humanoid.MaxHealth, 0, 1, 0)
+            end
+        end
+    elseif existing then
+        existing:Destroy()
+    end
+end
+
+-- Tracers
+local function createTracer(npc)
+    local root = npc:FindFirstChild("HumanoidRootPart")
+    if not root then return nil end
+
+    local line = Drawing.new("Line")
+    line.Visible = true
+    line.Color = Color3.fromRGB(255, 0, 0)
+    line.Thickness = 1
+    line.Transparency = 1
+
+    return {
+        npc = npc,
+        line = line
+    }
+end
+
+local function applyTracers()
+    tracers = {}
+    for _, npc in pairs(workspace:GetDescendants()) do
+        if npc:IsA("Model") and npc:FindFirstChildOfClass("Humanoid") and not game.Players:GetPlayerFromCharacter(npc) then
+            local tracer = createTracer(npc)
+            if tracer then
+                table.insert(tracers, tracer)
             end
         end
     end
 end
 
--- Проверка уже существующих NPC
-local function applyESPToExistingNPCs()
-    for _, descendant in pairs(workspace:GetDescendants()) do
-        handleNPC(descendant)
+-- Главная обработка NPC
+local function handleNPC(descendant)
+    if descendant:IsA("Model") and descendant:FindFirstChildOfClass("Humanoid") then
+        if game.Players:GetPlayerFromCharacter(descendant) then return end -- Не игрок
+
+        local humanoid = descendant:FindFirstChildOfClass("Humanoid")
+        if humanoid and humanoid.Health > 0 then
+            local root = descendant:FindFirstChild("HumanoidRootPart")
+            local torso = descendant:FindFirstChild("Torso") or descendant:FindFirstChild("UpperTorso")
+
+            -- Бокс
+            if espEnabled and torso and not adornments[descendant] then
+                local adornment = createBoxAdornment(torso)
+                adornments[descendant] = adornment
+                descendant.AncestryChanged:Connect(function(_, parent)
+                    if not parent then removeBoxAdornment(descendant) end
+                end)
+            end
+
+            -- Здоровье
+            if HealthDisplayEnabled and root then
+                updateHealthGui(descendant)
+            end
+        end
     end
 end
 
--- Обработка новых NPC
+-- Инициализация на уже существующих
+local function applyESPToExisting()
+    for _, desc in pairs(workspace:GetDescendants()) do
+        handleNPC(desc)
+    end
+    if TracersEnabled then
+        applyTracers()
+    end
+end
+
+-- Слежение за новыми
 workspace.DescendantAdded:Connect(function(child)
     handleNPC(child)
 end)
 
+-- Отрисовка трейсеров и обновление здоровья
+game:GetService("RunService").RenderStepped:Connect(function()
+    local camera = workspace.CurrentCamera
+    for _, tracer in ipairs(tracers) do
+        local npc = tracer.npc
+        local root = npc:FindFirstChild("HumanoidRootPart")
+        local humanoid = npc:FindFirstChildOfClass("Humanoid")
+
+        -- Health
+        if HealthDisplayEnabled then
+            updateHealthGui(npc)
+        end
+
+        -- Tracer
+        if TracersEnabled and root and humanoid and humanoid.Health > 0 then
+            local screenPos, onScreen = camera:WorldToViewportPoint(root.Position)
+            tracer.line.Visible = onScreen
+            if onScreen then
+                tracer.line.From = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y)
+                tracer.line.To = Vector2.new(screenPos.X, screenPos.Y)
+            end
+        else
+            tracer.line.Visible = false
+        end
+    end
+end)
+
+-- 💡 OrionLib переключатели:
 AimTab:AddToggle({
-    Name = "Включить ESP для NPC",
+    Name = "Бокс для NPC",
     Default = false,
     Save = false,
     Callback = function(Value)
         espEnabled = Value
-
-        -- Удаление всех adornments при выключении
         if not Value then
             for npc, adornment in pairs(adornments) do
                 adornment:Destroy()
             end
             adornments = {}
         else
-            applyESPToExistingNPCs()
+            applyESPToExisting()
+        end
+    end
+})
+
+AimTab:AddToggle({
+    Name = "Показывать здоровье NPC",
+    Default = false,
+    Save = false,
+    Callback = function(Value)
+        HealthDisplayEnabled = Value
+        if Value then
+            applyESPToExisting()
+        end
+    end
+})
+
+AimTab:AddToggle({
+    Name = "Включить трейсер к NPC",
+    Default = false,
+    Save = false,
+    Callback = function(Value)
+        TracersEnabled = Value
+        if Value then
+            applyTracers()
+        else
+            for _, tracer in ipairs(tracers) do
+                if tracer.line then tracer.line:Remove() end
+            end
+            tracers = {}
         end
     end
 })

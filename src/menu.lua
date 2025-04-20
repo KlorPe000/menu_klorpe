@@ -2052,6 +2052,94 @@ game:GetService("RunService").RenderStepped:Connect(function()
     end
 end)
 
+-- Таблица для хранения BoxAdornment
+local adornments = {}
+
+-- Флаг включения/отключения ESP
+local espEnabled = false
+
+-- Функция создания BoxAdornment
+local function createBoxAdornment(part)
+    local adornment = Instance.new("BoxHandleAdornment")
+    adornment.Size = part.Size * Vector3.new(0.6, 0.6, 0.6)
+    adornment.Transparency = 0.5
+    adornment.AlwaysOnTop = true
+    adornment.ZIndex = 5
+    adornment.Color3 = Color3.fromRGB(255, 0, 0)
+    adornment.Parent = game.Workspace
+    adornment.Adornee = part
+    return adornment
+end
+
+-- Удаление BoxAdornment
+local function removeBoxAdornment(npc)
+    if adornments[npc] then
+        adornments[npc]:Destroy()
+        adornments[npc] = nil
+        print("Удален BoxAdornment для NPC:", npc.Name)
+    end
+end
+
+-- Обработка NPC
+local function handleNPC(descendant)
+    if not espEnabled then return end -- Если выключено, не обрабатываем
+
+    if descendant:IsA("Model") and descendant:FindFirstChildOfClass("Humanoid") then
+        local player = game.Players:GetPlayerFromCharacter(descendant)
+        if player then return end -- Пропускаем игроков
+
+        local humanoid = descendant:FindFirstChildOfClass("Humanoid")
+        if humanoid and humanoid.Health > 0 then
+            local torso = descendant:FindFirstChild("Torso") or descendant:FindFirstChild("UpperTorso")
+            if torso and not adornments[descendant] then
+                local adornment = createBoxAdornment(torso)
+                adornments[descendant] = adornment
+
+                print("Добавлен BoxAdornment на NPC:", descendant.Name)
+
+                descendant.AncestryChanged:Connect(function(_, parent)
+                    if not parent then
+                        removeBoxAdornment(descendant)
+                    end
+                end)
+            end
+        end
+    end
+end
+
+-- Проверка уже существующих NPC
+local function applyESPToExistingNPCs()
+    for _, descendant in pairs(workspace:GetDescendants()) do
+        handleNPC(descendant)
+    end
+end
+
+-- Обработка новых NPC
+workspace.DescendantAdded:Connect(function(child)
+    handleNPC(child)
+end)
+
+AimTab:AddToggle({
+    Name = "Включить ESP для NPC",
+    Default = false,
+    Save = false,
+    Callback = function(Value)
+        espEnabled = Value
+
+        -- Удаление всех adornments при выключении
+        if not Value then
+            for npc, adornment in pairs(adornments) do
+                adornment:Destroy()
+            end
+            adornments = {}
+            print("ESP отключен")
+        else
+            print("ESP включен")
+            applyESPToExistingNPCs()
+        end
+    end
+})
+
 local Section = AimTab:AddSection({
     Name = "Бокс"
 })

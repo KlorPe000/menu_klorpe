@@ -2219,7 +2219,7 @@ AimTab:AddToggle({
 })
 
 AimTab:AddToggle({
-    Name = "Индикатор здоровья NPC",
+    Name = "Індикатор здоров'я NPC",
     Default = false,
     Save = false,
     Callback = function(Value)
@@ -2243,7 +2243,7 @@ AimTab:AddToggle({
 })
 
 AimTab:AddToggle({
-    Name = "Включить трейсер к NPC",
+    Name = "Трейсер для NPC",
     Default = false,
     Save = false,
     Callback = function(Value)

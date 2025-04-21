@@ -1951,8 +1951,9 @@ AimTab:AddToggle({
     end
 })
 
-Aim:AddSection({ Name = "Настройки для NPC" })
+AimTab:AddSection({ Name = "Настройки для NPC" })
 
+-- Флаги
 local espEnabled = false
 local HealthDisplayEnabled = false
 local TracersEnabled = false
@@ -1982,6 +1983,32 @@ local function removeBoxAdornment(npc)
 end
 
 -- Health GUI
+
+local function getHealthColor(healthRatio)
+    if healthRatio > 0.9 then
+        return Color3.fromRGB(0, 255, 0)  -- 90-100%
+    elseif healthRatio > 0.8 then
+        return Color3.fromRGB(64, 255, 0)  -- 80-90%
+    elseif healthRatio > 0.7 then
+        return Color3.fromRGB(128, 255, 0)  -- 70-80%
+    elseif healthRatio > 0.6 then
+        return Color3.fromRGB(192, 255, 0)  -- 60-70%
+    elseif healthRatio > 0.5 then
+        return Color3.fromRGB(255, 255, 0)  -- 50-60%
+    elseif healthRatio > 0.4 then
+        return Color3.fromRGB(255, 192, 0)  -- 40-50%
+    elseif healthRatio > 0.3 then
+        return Color3.fromRGB(255, 128, 0)  -- 30-40%
+    elseif healthRatio > 0.2 then
+        return Color3.fromRGB(255, 64, 0)   -- 20-30%
+    elseif healthRatio > 0.1 then
+        return Color3.fromRGB(255, 32, 0)   -- 10-20%
+    else
+        return Color3.fromRGB(255, 0, 0)    -- 0-10%
+    end
+end
+
+-- Обновлённая логика для индикатора здоровья
 local function updateHealthGui(npc)
     local humanoid = npc:FindFirstChildOfClass("Humanoid")
     local rootPart = npc:FindFirstChild("HumanoidRootPart")
@@ -1989,39 +2016,67 @@ local function updateHealthGui(npc)
 
     local existing = rootPart:FindFirstChild("HealthGui")
 
+    -- Если здоровье NPC 0, удаляем все индикаторы
+    if humanoid.Health <= 0 then
+        if existing then
+            existing:Destroy()
+        end
+        removeBoxAdornment(npc)
+        return
+    end
+
     if HealthDisplayEnabled then
         if not existing then
             local bar = Instance.new("BillboardGui", rootPart)
             bar.Name = "HealthGui"
             bar.Adornee = rootPart
-            bar.Size = UDim2.new(4, 0, 0.5, 0)
-            bar.StudsOffset = Vector3.new(0, 5, 0)
+            bar.Size = UDim2.new(3, 0, 0.3, 0) -- Размер индикатора
+            bar.StudsOffset = Vector3.new(0, 2.8, 0) -- чуть выше головы
             bar.AlwaysOnTop = true
 
             local bg = Instance.new("Frame", bar)
+            bg.Name = "Background"
             bg.BackgroundColor3 = Color3.new(0, 0, 0)
             bg.BorderSizePixel = 0
             bg.Size = UDim2.new(1, 0, 1, 0)
 
+            -- Контур
+            local outline = Instance.new("UIStroke", bg)
+            outline.Color = Color3.new(1, 1, 1)
+            outline.Thickness = 1
+            outline.Transparency = 0.3
+
+            -- Передний бар
             local fg = Instance.new("Frame", bg)
             fg.Name = "HealthBar"
-            fg.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+            fg.BackgroundColor3 = Color3.fromRGB(0, 255, 0) -- Изначально зелёный
             fg.BorderSizePixel = 0
             fg.Size = UDim2.new(1, 0, 1, 0)
+
+            -- Обработчик изменения здоровья
+            humanoid.HealthChanged:Connect(function()
+                updateHealthGui(npc)  -- Перерисовываем индикатор при изменении здоровья
+            end)
         end
 
         local gui = rootPart:FindFirstChild("HealthGui")
         if gui then
-            local bar = gui:FindFirstChild("Frame")
-            local fg = bar and bar:FindFirstChild("HealthBar")
+            local bg = gui:FindFirstChild("Background")
+            local fg = bg and bg:FindFirstChild("HealthBar")
             if fg then
-                fg.Size = UDim2.new(humanoid.Health / humanoid.MaxHealth, 0, 1, 0)
+                local hp = humanoid.Health
+                local maxHp = humanoid.MaxHealth
+                local ratio = math.clamp(hp / maxHp, 0, 1)
+
+                fg.Size = UDim2.new(ratio, 0, 1, 0)
+                fg.BackgroundColor3 = getHealthColor(ratio)  -- Применяем плавный градиент цвета
             end
         end
     elseif existing then
         existing:Destroy()
     end
 end
+
 
 -- Tracers
 local function createTracer(npc)
@@ -2041,7 +2096,15 @@ local function createTracer(npc)
 end
 
 local function applyTracers()
+    -- Очистка старых, на случай если функция вызывается повторно
+    for _, tracer in ipairs(tracers) do
+        if tracer.line then
+            tracer.line.Visible = false
+            tracer.line:Remove()
+        end
+    end
     tracers = {}
+
     for _, npc in pairs(workspace:GetDescendants()) do
         if npc:IsA("Model") and npc:FindFirstChildOfClass("Humanoid") and not game.Players:GetPlayerFromCharacter(npc) then
             local tracer = createTracer(npc)
@@ -2055,14 +2118,13 @@ end
 -- Главная обработка NPC
 local function handleNPC(descendant)
     if descendant:IsA("Model") and descendant:FindFirstChildOfClass("Humanoid") then
-        if game.Players:GetPlayerFromCharacter(descendant) then return end -- Не игрок
+        if game.Players:GetPlayerFromCharacter(descendant) then return end
 
         local humanoid = descendant:FindFirstChildOfClass("Humanoid")
         if humanoid and humanoid.Health > 0 then
             local root = descendant:FindFirstChild("HumanoidRootPart")
             local torso = descendant:FindFirstChild("Torso") or descendant:FindFirstChild("UpperTorso")
 
-            -- Бокс
             if espEnabled and torso and not adornments[descendant] then
                 local adornment = createBoxAdornment(torso)
                 adornments[descendant] = adornment
@@ -2071,15 +2133,36 @@ local function handleNPC(descendant)
                 end)
             end
 
-            -- Здоровье
             if HealthDisplayEnabled and root then
                 updateHealthGui(descendant)
+            elseif not HealthDisplayEnabled then
+                local existing = root and root:FindFirstChild("HealthGui")
+                if existing then
+                    existing:Destroy()
+                end
+            end
+
+            -- Добавим повторно трейсер при респавне
+            if TracersEnabled and not table.find(tracers, descendant) then
+                local existing = false
+                for _, t in ipairs(tracers) do
+                    if t.npc == descendant then
+                        existing = true
+                        break
+                    end
+                end
+                if not existing then
+                    local tracer = createTracer(descendant)
+                    if tracer then
+                        table.insert(tracers, tracer)
+                    end
+                end
             end
         end
     end
 end
 
--- Инициализация на уже существующих
+
 local function applyESPToExisting()
     for _, desc in pairs(workspace:GetDescendants()) do
         handleNPC(desc)
@@ -2089,12 +2172,10 @@ local function applyESPToExisting()
     end
 end
 
--- Слежение за новыми
 workspace.DescendantAdded:Connect(function(child)
     handleNPC(child)
 end)
 
--- Отрисовка трейсеров и обновление здоровья
 game:GetService("RunService").RenderStepped:Connect(function()
     local camera = workspace.CurrentCamera
     for _, tracer in ipairs(tracers) do
@@ -2102,12 +2183,10 @@ game:GetService("RunService").RenderStepped:Connect(function()
         local root = npc:FindFirstChild("HumanoidRootPart")
         local humanoid = npc:FindFirstChildOfClass("Humanoid")
 
-        -- Health
         if HealthDisplayEnabled then
             updateHealthGui(npc)
         end
 
-        -- Tracer
         if TracersEnabled and root and humanoid and humanoid.Health > 0 then
             local screenPos, onScreen = camera:WorldToViewportPoint(root.Position)
             tracer.line.Visible = onScreen
@@ -2121,7 +2200,7 @@ game:GetService("RunService").RenderStepped:Connect(function()
     end
 end)
 
--- 💡 OrionLib переключатели:
+-- OrionLib переключатели:
 AimTab:AddToggle({
     Name = "Бокс для NPC",
     Default = false,
@@ -2140,13 +2219,25 @@ AimTab:AddToggle({
 })
 
 AimTab:AddToggle({
-    Name = "Показывать здоровье NPC",
+    Name = "Индикатор здоровья NPC",
     Default = false,
     Save = false,
     Callback = function(Value)
         HealthDisplayEnabled = Value
         if Value then
             applyESPToExisting()
+        else
+            for _, npc in pairs(workspace:GetDescendants()) do
+                if npc:IsA("Model") and npc:FindFirstChildOfClass("Humanoid") then
+                    local rootPart = npc:FindFirstChild("HumanoidRootPart")
+                    if rootPart then
+                        local existing = rootPart:FindFirstChild("HealthGui")
+                        if existing then
+                            existing:Destroy()
+                        end
+                    end
+                end
+            end
         end
     end
 })
@@ -2161,7 +2252,10 @@ AimTab:AddToggle({
             applyTracers()
         else
             for _, tracer in ipairs(tracers) do
-                if tracer.line then tracer.line:Remove() end
+                if tracer.line then
+                    tracer.line.Visible = false
+                    tracer.line:Remove()
+                end
             end
             tracers = {}
         end

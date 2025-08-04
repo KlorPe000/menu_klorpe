@@ -3524,9 +3524,6 @@ local function loadKlorPeHub()
 	})
 
 	OrionLib:Init()
-
-
-	print("KlorPeHub успешно загружен!")
 end
 
 local function checkKey()

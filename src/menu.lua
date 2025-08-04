@@ -46,7 +46,6 @@ CloseCorner.Parent = CloseButton
 
 CloseButton.MouseButton1Click:Connect(function()
 	ScreenGui:Destroy()
-	print("Система ключей закрыта пользователем")
 end)
 
 CloseButton.MouseEnter:Connect(function()

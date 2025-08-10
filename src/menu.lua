@@ -2,6 +2,11 @@ local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 
+local oldGui = game:GetService("CoreGui"):FindFirstChild("KeySystemGui")
+if oldGui then
+	oldGui:Destroy()
+end
+
 local keyData = {75, 76, 79, 82, 80, 69, 88, 65}
 local correctKey = ""
 for i, code in ipairs(keyData) do
@@ -10,7 +15,7 @@ end
 local keyEntered = false
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.Parent = game:GetService("CoreGui")
 ScreenGui.Name = "KeySystemGui"
 
 local Frame = Instance.new("Frame")

@@ -1,3 +1,25 @@
+local saveFile = "klorpehub_key.txt"
+local saveTime = 172800
+
+local function saveKey(key)
+    writefile(saveFile, tostring(os.time()) .. "|" .. key)
+end
+
+local function loadKey()
+    if isfile(saveFile) then
+        local content = readfile(saveFile)
+        local sep = string.find(content, "|")
+        if sep then
+            local timestamp = tonumber(string.sub(content, 1, sep - 1))
+            local savedKey = string.sub(content, sep + 1)
+            if os.time() - timestamp <= saveTime then
+                return savedKey
+            end
+        end
+    end
+    return nil
+end
+
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
@@ -13,139 +35,6 @@ for i, code in ipairs(keyData) do
 	correctKey = correctKey .. string.char(code + 32)
 end
 local keyEntered = false
-
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Parent = game:GetService("CoreGui")
-ScreenGui.Name = "KeySystemGui"
-
-local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0, 400, 0, 200)
-Frame.Position = UDim2.new(0.5, -200, 0.5, -100)
-Frame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-Frame.BorderSizePixel = 0
-Frame.Parent = ScreenGui
-
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 10)
-UICorner.Parent = Frame
-
-local UIStroke = Instance.new("UIStroke")
-UIStroke.Color = Color3.fromRGB(100, 100, 100)
-UIStroke.Thickness = 2
-UIStroke.Parent = Frame
-
-local CloseButton = Instance.new("TextButton")
-CloseButton.Size = UDim2.new(0, 30, 0, 30)
-CloseButton.Position = UDim2.new(1, -35, 0, 5)
-CloseButton.BackgroundColor3 = Color3.fromRGB(255, 70, 70)
-CloseButton.BorderSizePixel = 0
-CloseButton.Text = "✖"
-CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-CloseButton.TextSize = 18
-CloseButton.Font = Enum.Font.GothamBold
-CloseButton.Parent = Frame
-
-local CloseCorner = Instance.new("UICorner")
-CloseCorner.CornerRadius = UDim.new(0, 15)
-CloseCorner.Parent = CloseButton
-
-CloseButton.MouseButton1Click:Connect(function()
-	ScreenGui:Destroy()
-end)
-
-CloseButton.MouseEnter:Connect(function()
-	CloseButton.BackgroundColor3 = Color3.fromRGB(255, 90, 90)
-end)
-
-CloseButton.MouseLeave:Connect(function()
-	CloseButton.BackgroundColor3 = Color3.fromRGB(255, 70, 70)
-end)
-
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 50)
-Title.Position = UDim2.new(0, 0, 0, 0)
-Title.BackgroundTransparency = 1
-Title.Text = "KlorPeHub - Система Ключей"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 18
-Title.Font = Enum.Font.GothamBold
-Title.Parent = Frame
-
-local KeyBox = Instance.new("TextBox")
-KeyBox.Size = UDim2.new(0.8, 0, 0, 40)
-KeyBox.Position = UDim2.new(0.1, 0, 0.4, 0)
-KeyBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-KeyBox.BorderSizePixel = 0
-KeyBox.Text = ""
-KeyBox.PlaceholderText = "Введите ключ..."
-KeyBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-KeyBox.TextSize = 16
-KeyBox.Font = Enum.Font.Gotham
-KeyBox.Parent = Frame
-
-local KeyBoxCorner = Instance.new("UICorner")
-KeyBoxCorner.CornerRadius = UDim.new(0, 5)
-KeyBoxCorner.Parent = KeyBox
-
-local SubmitButton = Instance.new("TextButton")
-SubmitButton.Size = UDim2.new(0.8, 0, 0, 40)
-SubmitButton.Position = UDim2.new(0.1, 0, 0.7, 0)
-SubmitButton.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
-SubmitButton.BorderSizePixel = 0
-SubmitButton.Text = "Подтвердить"
-SubmitButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-SubmitButton.TextSize = 16
-SubmitButton.Font = Enum.Font.GothamBold
-SubmitButton.Parent = Frame
-
-local SubmitCorner = Instance.new("UICorner")
-SubmitCorner.CornerRadius = UDim.new(0, 5)
-SubmitCorner.Parent = SubmitButton
-
-local dragging = false
-local dragStart = nil
-local startPos = nil
-
-local function updateInput(input)
-	local delta = input.Position - dragStart
-	Frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-end
-
-Frame.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-		dragging = true
-		dragStart = input.Position
-		startPos = Frame.Position
-
-		input.Changed:Connect(function()
-			if input.UserInputState == Enum.UserInputState.End then
-				dragging = false
-			end
-		end)
-	end
-end)
-
-Frame.InputChanged:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-		if dragging then
-			updateInput(input)
-		end
-	end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-		if dragging then
-			updateInput(input)
-		end
-	end
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-		dragging = false
-	end
-end)
 
 local function loadKlorPeHub()
 
@@ -3531,13 +3420,155 @@ local function loadKlorPeHub()
 	OrionLib:Init()
 end
 
+local function Main()
+	loadKlorPeHub()
+end
+
+local savedKey = loadKey()
+if savedKey and savedKey == correctKey then
+	Main()
+	return
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = game:GetService("CoreGui")
+ScreenGui.Name = "KeySystemGui"
+
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 400, 0, 200)
+Frame.Position = UDim2.new(0.5, -200, 0.5, -100)
+Frame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+Frame.BorderSizePixel = 0
+Frame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 10)
+UICorner.Parent = Frame
+
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = Color3.fromRGB(100, 100, 100)
+UIStroke.Thickness = 2
+UIStroke.Parent = Frame
+
+local CloseButton = Instance.new("TextButton")
+CloseButton.Size = UDim2.new(0, 30, 0, 30)
+CloseButton.Position = UDim2.new(1, -35, 0, 5)
+CloseButton.BackgroundColor3 = Color3.fromRGB(255, 70, 70)
+CloseButton.BorderSizePixel = 0
+CloseButton.Text = "✖"
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.TextSize = 18
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.Parent = Frame
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 15)
+CloseCorner.Parent = CloseButton
+
+CloseButton.MouseButton1Click:Connect(function()
+	ScreenGui:Destroy()
+end)
+
+CloseButton.MouseEnter:Connect(function()
+	CloseButton.BackgroundColor3 = Color3.fromRGB(255, 90, 90)
+end)
+
+CloseButton.MouseLeave:Connect(function()
+	CloseButton.BackgroundColor3 = Color3.fromRGB(255, 70, 70)
+end)
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 50)
+Title.Position = UDim2.new(0, 0, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "KlorPeHub - Система Ключей"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 18
+Title.Font = Enum.Font.GothamBold
+Title.Parent = Frame
+
+local KeyBox = Instance.new("TextBox")
+KeyBox.Size = UDim2.new(0.8, 0, 0, 40)
+KeyBox.Position = UDim2.new(0.1, 0, 0.4, 0)
+KeyBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+KeyBox.BorderSizePixel = 0
+KeyBox.Text = ""
+KeyBox.PlaceholderText = "Введите ключ..."
+KeyBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeyBox.TextSize = 16
+KeyBox.Font = Enum.Font.Gotham
+KeyBox.Parent = Frame
+
+local KeyBoxCorner = Instance.new("UICorner")
+KeyBoxCorner.CornerRadius = UDim.new(0, 5)
+KeyBoxCorner.Parent = KeyBox
+
+local SubmitButton = Instance.new("TextButton")
+SubmitButton.Size = UDim2.new(0.8, 0, 0, 40)
+SubmitButton.Position = UDim2.new(0.1, 0, 0.7, 0)
+SubmitButton.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+SubmitButton.BorderSizePixel = 0
+SubmitButton.Text = "Подтвердить"
+SubmitButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+SubmitButton.TextSize = 16
+SubmitButton.Font = Enum.Font.GothamBold
+SubmitButton.Parent = Frame
+
+local SubmitCorner = Instance.new("UICorner")
+SubmitCorner.CornerRadius = UDim.new(0, 5)
+SubmitCorner.Parent = SubmitButton
+
+local dragging = false
+local dragStart = nil
+local startPos = nil
+
+local function updateInput(input)
+	local delta = input.Position - dragStart
+	Frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+Frame.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = Frame.Position
+
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+Frame.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+		if dragging then
+			updateInput(input)
+		end
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+		if dragging then
+			updateInput(input)
+		end
+	end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = false
+	end
+end)
+
 local function checkKey()
 	if KeyBox.Text == correctKey then
 		keyEntered = true
+		saveKey(KeyBox.Text)
 		ScreenGui:Destroy()
-
-		loadKlorPeHub()
-
+		Main()
 	else
 		KeyBox.Text = ""
 		KeyBox.PlaceholderText = "Неправильный ключ!"
